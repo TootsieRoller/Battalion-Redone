@@ -1,0 +1,13 @@
+{
+  "name": "battalion-server",
+  "version": "0.0.1",
+  "description": "Script to allow online gameplayer",
+  "main": "server.js",
+  "author": "Eli Sanford",
+  "private": true,
+  "license": "BSD",
+  "dependencies": {
+    "express": "3.4.8",
+    "socket.io": "^1.0.6"
+  }
+}

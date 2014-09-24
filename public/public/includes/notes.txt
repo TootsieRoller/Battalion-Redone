@@ -1,0 +1,40 @@
+**testing
+ranged units counter attack should be variable
+if page not focused then wont transmit messages
+
+
+
+********* new units:
+** ninja -> moves 5 by foot, stealthed, weak medium defense but strong light attack
+	flak damage
+	can capture but loses stealth when capturing
+
+** humvee -> moves 4 by wheel, weak medium defense, moderate light attack with flak,
+	can capture
+	if it dies from heavy or medium attacker, drops a heavy commando
+
+*spiders cannot be countered
+*stealth tanks should hide
+
+// map should include land cutoff when scrolled out of grid
+
+// search edit
+
+// player.check units
+
+// efficiency
+// instead of player makes move, affecting the game
+// allow 100% access to making moves, so server connects will go faster,
+// only allow user input for their team but dont restrict moves in the engine
+
+change move data to be based on direction and turn
+unit, dir, moves[(move amt), (turn), etc.]
+
+
+// sever attack wont work
+// console server side move + client response
+// player 2 in server data starts as player 1 in game
+// fix order for players on server response
+
+// get rid of global vars
+// rid of INTERFACE -> send game to socket on initialization
