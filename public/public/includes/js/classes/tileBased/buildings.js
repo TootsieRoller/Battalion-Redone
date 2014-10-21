@@ -1,9 +1,9 @@
 var Buildings = {
-	Build_Class:function(game, place_index, name, x, y)
+	Build_Class:function(game, place_index)
 	{
 		function err(txt)
 		{
-			console.error(name+" of "+place_index+": "+txt);
+			console.error("Building of "+place_index+" at ("+this.X+", "+this.Y+"): "+txt);
 		}
 		this.SELECTABLE = 3;
 
@@ -31,8 +31,8 @@ var Buildings = {
 		this.Sprite = null;
 		this.Resources = BuildData.Resources;
 		this.Income = BuildData.Income;
-		this.X = x;
-		this.Y = y;
+		this.X;
+		this.Y;
 		this.X_Offset = function()
 		{
 			return BuildData.X;
@@ -40,6 +40,17 @@ var Buildings = {
 		this.Y_Offset = function()
 		{
 			return BuildData.Y;
+		};
+		this.Data = function()
+		{
+			var self = this;
+			return {
+				index:place_index,
+				x:self.X,
+				y:self.Y,
+				stature:self.Stature,
+				resources:self.Resources
+			};
 		};
 
 		var mods = Core.Array.Clone(BuildData.Modifiers);
@@ -122,6 +133,7 @@ var Buildings = {
 		this.Active = false;
 		this.Set_Active = function(value)
 		{
+			if(!BuildData.Act)return;
 			this.Active = value;
 			select.set({show:value});
 		};
@@ -134,14 +146,14 @@ var Buildings = {
 		{
 			if(client)
 			{
-				if(BuildData.Actable)
+				if(BuildData.Act)
 				{
 					this.Set_Active(true);
 				}
 			}
 			else
 			{
-				if(BuildData.Actable)
+				if(BuildData.Act)
 				{
 					this.Active = true;
 				}
@@ -249,13 +261,13 @@ var Buildings = {
 			}
 		}
 	},
-	New:function(Game, name, x, y)
+	New:function(Game, name)
 	{
 		var index = Building_Data.Get(name);
 		if(index==0)
 		{
 			console.log(name+" is not a proper terrain name.");
 		}
-		return new Buildings.Build_Class(Game,index,"Buildings("+x+","+y+")",x,y);
+		return new Buildings.Build_Class(Game,index);
 	}
 };

@@ -3,6 +3,11 @@ var Interface_Class = function(cols, rows, game)
 	var allow_input = false;
 	var self = this;
 	self.Game = game;
+	self.setGame = function(g)
+	{
+		game = g;
+		self.Game = g;
+	};
 	self.Slide_Up = HUD_Display.Add_Drawable(Shape.Rectangle, "up", 100, 0, 400, 20, "#FF0", Canvas.Clear, 0);
 	self.Slide_Down = HUD_Display.Add_Drawable(Shape.Rectangle, "down", 100, 580, 400, 20, "#FF0", Canvas.Clear, 0);
 	self.Slide_Left = HUD_Display.Add_Drawable(Shape.Rectangle, "left", 0, 100, 20, 400, "#FF0", Canvas.Clear, 0);
@@ -32,9 +37,11 @@ var Interface_Class = function(cols, rows, game)
 	terrain_disp.setup(600, 600, game.Terrain_Map.Width*TILESIZE, game.Terrain_Map.Height*TILESIZE, TILESIZE, TILESIZE);
 	var paint = function(x, y, left, top, w, h, zoom){
 		var at = game.Terrain_Map.At(y,x);
-		if(at!=null)at.UI_Draw(backCanvas, left, top, zoom);
-		at = at.Building;
-		if(at!=null)at.UI_Draw(buildingCanvas, left, top, zoom);
+		if(at!=null){
+			at.UI_Draw(backCanvas, left, top, zoom);
+			at = at.Building;
+			if(at!=null)at.UI_Draw(buildingCanvas, left, top, zoom);
+		}
 		at = game.Units_Map.At(y,x);
 		if(at!=null&&at!=moving_unit)at.UI_Draw(charCanvas, left, top, zoom);
 		at = tiles.At(y,x);
@@ -116,9 +123,6 @@ var Interface_Class = function(cols, rows, game)
 	var Avatar = {
 		Icon:Avatar_Display.Add_Drawable(Images.Retrieve("empty"), "Icon", 10, 150, 100, 100, null, Canvas.Background),
 		Current_Player:Avatar_Display.Add_Drawable(new Text_Class("15pt Times New Roman", "#000"), "Player1", 5, 210, 200, 20, null, Canvas.Background),
-		Second_Player:Avatar_Display.Add_Drawable(new Text_Class("15pt Times New Roman", "#000"), "Player2", 5, 210, 200, 20, null, Canvas.Background),
-		Third_Player:Avatar_Display.Add_Drawable(new Text_Class("15pt Times New Roman", "#000"), "Player3", 5, 210, 200, 20, null, Canvas.Background),
-		Fourth_Player:Avatar_Display.Add_Drawable(new Text_Class("15pt Times New Roman", "#000"), "Player4", 5, 210, 200, 20, null, Canvas.Background),
 		Info:Avatar_Display.Add_Drawable(new Text_Class("10pt Times New Roman", "#000"), "Player", 5, 300, 200, 20, null, Canvas.Background),
 		Turn:Avatar_Display.Add_Drawable(new Text_Class("10pt Times New Roman", "#000"), "Turn", 80, 100, 200, 20, null, Canvas.Background),
 		Update_Player_List:function(){
@@ -214,7 +218,7 @@ var Interface_Class = function(cols, rows, game)
 								{
 									if(game.Build(building, unit_index))
 									{
-										if(online)socket.emit('send build', game.id, socket.index, building.Index, unit_index);
+										if(online)socket.emit('send build', building.Index, unit_index);
 									}
 								}
 							}, "UL btn "+i+", "+j));
@@ -435,7 +439,7 @@ var Interface_Class = function(cols, rows, game)
 	var release_fnc = function(x, y){
 		if(!allow_input)return;
 		if(~clickPos)
-		if(Math.abs(x-clickPos[0])<5&&Math.abs(y-clickPos[1])<5)
+		if(Math.abs(x-clickPos[0])<10&&Math.abs(y-clickPos[1])<10)
 		{
 			if(self.Clickable.Click(x, y))return;
 			self.Tiles.Click(Math.floor((x+scroller.getValues().left)/TILESIZE),Math.floor((y+scroller.getValues().top)/TILESIZE));
@@ -520,8 +524,9 @@ var Interface_Class = function(cols, rows, game)
 		zooming:true
 	});
 	var reflow = function(halt){
-		clientWidth = container.clientWidth;
-		clientHeight = container.clientHeight;
+		if(game==null)return;
+		clientWidth = document.body.clientWidth;
+		clientHeight = document.body.clientHeight;
 		scroller.setDimensions(600, 600, game.Terrain_Map.Width*TILESIZE, game.Terrain_Map.Height*TILESIZE, halt);
 	};
 	window.addEventListener("resize", reflow, false);
@@ -558,31 +563,36 @@ var Interface_Class = function(cols, rows, game)
 	self.Start = function()
 	{
 		Animations.kill = false;
+		document.getElementById("endTurn").style.display = "block";
+		window.parent.openChat();
 	};
-	self.End_Game = function()
+	self.End_Game = function(players, turns)
 	{
 		Animations.kill = true;
-		HUD_Display.Delete_Drawable(self.Slide_Up);
-		HUD_Display.Delete_Drawable(self.Slide_Down);
-		HUD_Display.Delete_Drawable(self.Slide_Left);
-		HUD_Display.Delete_Drawable(self.Slide_Right);
-		Stats_Display.Delete_Drawable("Icon");
-		Stats_Display.Delete_Drawable("Name");
-		Stats_Display.Delete_Drawable("Desc");
-		Stats_Display.Delete_Drawable("Info");
-		Stats_Display.Delete_Drawable("Div1");
-		Avatar_Display.Delete_Drawable("Icon");
-		Avatar_Display.Delete_Drawable("Player1");
-		Avatar_Display.Delete_Drawable("Player2");
-		Avatar_Display.Delete_Drawable("Player3");
-		Avatar_Display.Delete_Drawable("Player4");
-		Avatar_Display.Delete_Drawable("Player");
-		Avatar_Display.Delete_Drawable("Turn");
-		//display win screen
-		// setTimeout(function(){
-			game.Set_Interface(null);
-			mainMenu();
-		// },1000);
+		document.getElementById("endTurn").style.display = "none";
+		Canvas.Stop_All();
+		Canvas.Set_Game(null);
+		socket.game_id = null;
+		if(players!=null)
+		{
+			players = Core.Array.Organize.Descending(players, function(index){
+				return index.data.turns_alive;
+			}, function(index){
+				return index.data.damage_delt;
+			}, function(index){
+				return index.data.units_killed;
+			}, function(index){
+				return index.data.money_spent;
+			});
+			self = this;
+			Menu.PostGame.Set(game.Name, players, turns, function(){
+				self.Close_Menu();
+				game = null;
+				mainMenu();
+			});
+			self.Display_Menu(Menu.PostGame);
+		}
+		if(online)socket.emit();
 	};
 
 	function hl_map(map, display)
@@ -721,7 +731,7 @@ var Interface_Class = function(cols, rows, game)
 			var path = selected_unit.Mover.Path();
 			if(game.Move(selected_unit, x, y, path))
 			{
-				if(online)socket.emit('send move', game.id, socket.index, selected_unit.Index, x, y, path);
+				if(online)socket.emit('send move', selected_unit.Index, x, y, path);
 			}
 			else
 			{

@@ -12,13 +12,13 @@ function Animation_Display_Class()
 
 		var places_class = function(holder,C,X,Y,W,H,S,i)
 		{
-			this.set = function(values)
+			this.set = function(update)
 			{
 				var ani = this.values;
 				if(ani.show)holder.Clear(ani.canvas, ani.x, ani.y, ani.width, ani.height);
-				for(var i in values)
+				for(var i in update)
 				{
-					ani[i] = values[i];
+					ani[i] = update[i];
 				}
 				if(ani.show)holder.Draw(ani.canvas, ani.x, ani.y, ani.width, ani.height);
 			};

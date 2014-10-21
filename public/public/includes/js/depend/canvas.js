@@ -464,6 +464,7 @@ function initiateCanvas(name){
 	context.width = parseInt(element.style.width);
 	context.height = parseInt(element.style.height);
 	context.source = canvas;
+	context.name = name;
 	Canvas.Contexts.push(context);
 	return context;
 }

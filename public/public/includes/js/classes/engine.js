@@ -1,33 +1,25 @@
-var Engine_Class = function(terre)
+var Engine_Class = function(input)
 {
-	terre = Clone_Map(terre);
-	if(terre!=null)
-	{
-		for(var x=0;x<terre.length;x++)
-		for(var y=0;y<terre[x].length;y++)
-		{
-			terre[x][y] = new Terrain.Terre_Class(this,terre[x][y],"Terrain("+x+","+y+")",x,y);
-		}
-	}
-	terre = new Map_Holder(terre);
-	this.Terrain_Map = terre;
-	var units = new Map_Holder(Blank_Map(terre.Width, terre.Height));
-	this.Units_Map = units;
-	var buildings = new Map_Holder(Blank_Map(terre.Width, terre.Height));
-	this.Buildings_Map = buildings;
 	var UI;
-	this.Name = null;
-	this.Interface = UI;
 	var Units = [];
 	var Buildings = [];
 	var Players = [];
 	var Connected_Players = [];
 	var turn = 0;
 	var cur_player = 0;
-	this.Game_Over = false;
 	var client = null;
-
+	var terre;
+	var units;
+	var buildings;
+	this.Terrain_Map = terre;
+	this.Units_Map = units;
+	this.Buildings_Map = buildings;
+	this.Name = null;
+	this.Interface = UI;
+	this.Game_Over = false;
+	this.Map = null;
 	this.id = null;
+	this.valid = true;
 
 	this.Set_Interface = function(ui)
 	{
@@ -38,7 +30,7 @@ var Engine_Class = function(terre)
 	{
 		this.Game_Over = true;
 		if(UI!=null)
-			UI.End_Game();
+			UI.End_Game(Players, turn);
 	};
 
 	this.Move = function(unit, x, y, path)
@@ -97,6 +89,7 @@ var Engine_Class = function(terre)
 		Players[team].Add_Unit(input);
 		input.X = x;
 		input.Y = y;
+		return input;
 	};
 	this.Add_Building = function(input, x, y, team)
 	{
@@ -122,6 +115,7 @@ var Engine_Class = function(terre)
 			}
 			Players[team].Capture(input);
 		}
+		return input;
 	};
 	this.Unit_Amount = function()
 	{
@@ -185,12 +179,12 @@ var Engine_Class = function(terre)
 	this.Host_Game = function(id)
 	{
 		this.id = id;
-		if(online)socket.emit('start', id);
+		if(online)socket.emit('start');
 		this.Start();
 	};
 	this.Start = function()
 	{
-		curently_playing = true;
+		currently_playing = true;
 		if(UI!=null)
 		{
 			UI.Close_Menu();
@@ -205,65 +199,22 @@ var Engine_Class = function(terre)
 	};
 	this.Leave = function(slot)
 	{
-		Player[slot].Lose();
+		Players[slot].Lose();
 	};
 
-	this.Set = function(data)
-	{
-		if(data.terrain!=null)
-		{
-			terre = data.terrain;
-			this.Terrain_Map = terre;
-		}
-		if(data.unit_map!=null)
-		{
-			units = data.unit_map;
-			this.Units_Map = units;
-		}
-		if(data.build_map!=null)
-		{
-			buildings = data.build_map;
-			this.Buildings_Map = buildings;
-		}
-		if(data.name!=null)
-		{
-			this.Name = data.name;
-		}
-		if(data.units!=null)
-		{
-			Units = data.units;
-		}
-		if(data.buildings!=null)
-		{
-			Buildings = data.buildings;
-		}
-		if(data.players!=null)
-		{
-			Players = data.players;
-		}
-		if(data.con_players!=null)
-		{
-			Connected_Players = data.con_players;
-		}
-		if(data.turn!=null)
-		{
-			turn = data.turn;
-		}
-		if(data.cur_player!=null)
-		{
-			cur_player = data.cur_player;
-		}
-		if(data.game_over!=null)
-		{
-			this.Game_Over = data.game_over;
-		}
-	};
 	this.Data = function()
 	{
 		var self = this;
+		var player_data = [];
+		for(var i in Players)
+		{
+			player_data.push(Players[i].Data());
+		}
 		return {
-			map_id:Levels.From_Name(self.Name),
-			connected:JSON.stringify(Connected_Players)
+			id:self.id,
+			map:self.Map,
+			connected:Connected_Players,
+			players:player_data
 		};
 	};
 	this.Clone = function()
@@ -287,21 +238,24 @@ var Engine_Class = function(terre)
 
 	this.Add_Player = function(name, color)
 	{
+		if(currently_playing)return;
+console.log(Player_Class);
 		var player = new Player_Class(this, name, Players.length, color);
+console.log(player);
 		Players.push(player);
 		Connected_Players.push(null);
+		return player;
 	};
 	this.Player_Died = function(input)
 	{
 		var pos = Players.indexOf(input);
 		if(~pos)
 		{
-			var cur = Players[pos];
 			Players[pos].Dead = true;
 			var alive = -1;
 			for(var i in Players)
 			{
-				if(!Player[i].Died)
+				if(!Players[i].Dead)
 				{
 					if(alive!=-1)
 					{
@@ -313,7 +267,7 @@ var Engine_Class = function(terre)
 			}
 			if(alive!=-1)
 			{
-				this.Player_Won(alive);
+				this.Player_Won(Players[alive]);
 			}
 			if(UI!=null)
 				UI.Draw();
@@ -328,17 +282,15 @@ var Engine_Class = function(terre)
 		{
 			if(UI==null)return;
 			alert(input.Name+" wins!");
-			console.error("stack trace");
-			debugger;
 			for(var i in Players)
 			{
 				if(Players[i]==null)continue;
 				if(Players[i]==input)continue;
-				if(Players[i].Died)continue;
+				if(Players[i].Dead)continue;
 				Players[i].Kill_All(true);
 			}
 			var self = this;
-			setTimeout(function(){self.End_Game();},2000);
+			setTimeout(function(){self.End_Game(true);},1000);
 			return;
 		}
 		console.error("Player not attached to this game.");
@@ -354,6 +306,11 @@ var Engine_Class = function(terre)
 	this.Client_Player = function()
 	{
 		return client;
+	};
+	this.Player = function(index)
+	{
+		if(index>=Players.length)return;
+		return Players[index];
 	};
 	this.Next_Player = function()
 	{
@@ -371,6 +328,26 @@ var Engine_Class = function(terre)
 			UI.Select_Tile();
 			UI.Set_Next_Player(Players[cur_player], (socket.index==Connected_Players[cur_player]));
 		}
+		if(Connected_Players[cur_player]==null)
+		{
+			var self = this;
+			LOG.add("No AI, ending turn in 5 seconds.", "#FFF", 1000);
+			setTimeout(function(){
+				LOG.add("No AI, ending turn in 4 seconds.", "#FFF", 1000);
+				setTimeout(function(){
+					LOG.add("No AI, ending turn in 3 seconds.", "#FFF", 1000);
+					setTimeout(function(){
+						LOG.add("No AI, ending turn in 2 seconds.", "#FFF", 1000);
+						setTimeout(function(){
+							LOG.add("No AI, ending turn in 1 second.", "#FFF", 1000);
+								setTimeout(function(){
+									AI.Solve(self);
+								}, 1000);
+						}, 1000);
+					}, 1000);
+				}, 1000);
+			}, 1000);
+		}
 	};
 	this.Turn = function()
 	{
@@ -382,4 +359,77 @@ var Engine_Class = function(terre)
 		this.Interface = ui;
 		UI = ui;
 	};
+
+	if(typeof(input)==='string')
+	{ // when input is encrypted data for existing game--load gamestate
+		var data = JSON.parse(input);
+		this.id = data.id;
+		this.Map = data.map;
+		var map = Clone_Map(Levels.Terrain(data.map));
+		if(map!=null)
+		{
+			for(var x=0;x<map.length;x++)
+			for(var y=0;y<map[x].length;y++)
+			{
+				map[x][y] = new Terrain.Terre_Class(this,map[x][y],"Terrain("+x+","+y+")",x,y);
+			}
+		}
+		terre = new Map_Holder(map);
+		units = new Map_Holder(Blank_Map(terre.Width, terre.Height));
+		buildings = new Map_Holder(Blank_Map(terre.Width, terre.Height));
+		this.Terrain_Map = terre;
+		this.Units_Map = units;
+		this.Buildings_Map = buildings;
+		Connected_Players = data.connected;
+		var players = data.players;
+		for(var p in players)
+		{
+			var p_data = players[p];
+	console.log("p",p);
+			var player = this.Add_Player(p_data.name, p_data.color);
+	console.log(player);
+			player.data = p_data.data;
+			var units = p_data.units;
+			for(var u in units)
+			{
+	console.log("u",u);
+				var u_data = units[u];
+	console.log(u_data);
+				this.Add_Unit(new Characters.Char_Class(this, u_data.index), u_data.x, u_data.y, p).Health = u_data.health;
+	console.log("ud");
+			}
+			var build = p_data.buildings;
+			for(var b in build)
+			{
+	console.log("b",b);
+				var b_data = build[u];
+	console.log(b_data);
+				var cur_b = this.Add_Building(new Buildings.Build_Class(this, b_data.index), b_data.x, b_data.y, p);
+				cur_b.Stature = b_data.stature;
+				cur_b.Resources = b_data.resources;
+	console.log("bd");
+			}
+		}
+	console.log("done");
+	}
+	else if(typeof(input)!=='undefined')
+	{ // when input is an empty map--make new game
+		var map = Clone_Map(input);
+		if(map!=null)
+		{
+			for(var x=0;x<map.length;x++)
+			for(var y=0;y<map[x].length;y++)
+			{
+				map[x][y] = new Terrain.Terre_Class(this,map[x][y],"Terrain("+x+","+y+")",x,y);
+			}
+		}
+		terre = new Map_Holder(map);
+		units = new Map_Holder(Blank_Map(terre.Width, terre.Height));
+		buildings = new Map_Holder(Blank_Map(terre.Width, terre.Height));
+		this.Terrain_Map = terre;
+		this.Units_Map = units;
+		this.Buildings_Map = buildings;
+		//var temp_game = new game.Engine_Class();
+	}
+	else this.valid = false; // game does not have valid input to function
 };

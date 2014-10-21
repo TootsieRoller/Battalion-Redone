@@ -211,6 +211,19 @@ var Levels_Class = function()
 		}
 	};
 
+	this.Draw = function(level, canvas, xOffset, yOffset, width, height)
+	{
+		var map = LevelData.Terrain[level];
+		var tileWidth = width/map.length;
+		var tileHeight = height/map[0].length;
+		debugger;
+		for(var x=0;x<map.length;x++)
+		for(var y=0;y<map[x].length;y++)
+		{
+			var img = Terrain_Data.TERRE[map[x][y]].Sprite.Image();
+			Terrain_Data.TERRE[map[x][y]].Sprite.Draw(canvas,xOffset+x*tileWidth,yOffset+y*tileHeight,.1);
+		}
+	};
 	this.Terrain = function(num)
 	{
 		return LevelData.Terrain[num];

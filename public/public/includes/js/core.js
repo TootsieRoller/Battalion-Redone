@@ -15,10 +15,56 @@ var lastLoop = new Date;
 
 var	fps = 30,
 	paused = false,
-	curently_playing = false,
+	currently_playing = false,
 	gameInProgress = false,
 	speedAdjustmentUp = false;
 var tpf = 1000/fps;
+
+var LOG = {
+	list:[],
+	indexer:0,
+	display:function(){
+		if(!devCanvas)return;
+		devCanvas.clearRect(0, 0, Canvas.Width, Canvas.Height);
+		var level = 0;
+		for(var i in this.list)
+		{
+			this.list[i].txt.Draw(devCanvas, 10, (level++)*30, 600, 15, this.list[i].index+": "+this.list[i].msg);
+		}
+	},
+	add:function(msg, color, time){
+		if(time==null)time = 10000;
+		if(this.list.length==0)
+		{
+			this.indexer = 0;
+		}
+		this.list.push({
+			txt:new Text_Class("20pt Times New Roman", color),
+			msg:msg,
+			index:this.indexer
+		});
+		this.display();
+		var i = this.indexer;
+		setTimeout(function(){
+			LOG.remove(i);
+		},time);
+		return this.indexer++;
+	},
+	clear:function(){
+		this.list = [];
+		this.display();
+	},
+	remove:function(index){
+		for(var i in this.list)
+		{
+			if(this.list[i].index==index)
+			{
+				this.list.splice(i, 1);
+			}
+		}
+		this.display();
+	}
+};
 
 var Core = {
 	Target_Class:function(input)
@@ -240,7 +286,7 @@ var Core = {
 	},
 	Explode:function(selectable)
 	{
-		var d = HUD_Display.Add_Drawable(Images.Retrieve("Explosion"),"death"+selectable.X+","+selectable.Y,selectable.X*TILESIZE-INTERFACE.X_Offset(),(selectable.Y-.5)*TILESIZE-INTERFACE.Y_Offset(),TILESIZE,TILESIZE,null,Canvas.Clear,1,0);
+		var d = HUD_Display.Add_Drawable(Images.Retrieve("Explosion"),selectable.SELECTABLE+"death"+selectable.X+","+selectable.Y,selectable.X*TILESIZE-INTERFACE.X_Offset(),(selectable.Y-.5)*TILESIZE-INTERFACE.Y_Offset(),TILESIZE,TILESIZE,null,Canvas.Clear,1,0);
 		if(d!=null)
 		Core.Fade_Drawable(d, 0, 10, function(){
 			HUD_Display.Delete_Drawable(d);
@@ -319,32 +365,105 @@ var Core = {
 			}
 			arr = temp_arr;
 			return true;
+		},
+		Organize:{
+			Ascending:function(input)
+			{
+				var arr = Core.Array.Clone(input);
+				if(arguments.length==1)
+				{
+					for(var step=0;step<arr.length-1;++step)
+					for(var i=0;i<arr.length-step-1;++i)
+					{
+						if(arr[i]>arr[i+1])
+						{
+							var temp = arr[i];
+							arr[i] = arr[i+1];
+							arr[i+1] = temp;
+						}
+					}
+					return;
+				}
+				for(var step=0;step<arr.length-1;++step)
+				for(var i=0;i<arr.length-step-1;++i)
+				{
+					for(var order_by=1;order_by<arguments.length;order_by++)
+					{
+						var left = arguments[order_by](arr[i]);
+						var right = arguments[order_by](arr[i+1]);
+						if(left==right)continue;
+						if(left>right)
+						{
+							var temp = arr[i];
+							arr[i] = arr[i+1];
+							arr[i+1] = temp;
+						}
+						break;
+					}
+				}
+				return arr;
+			},
+			Descending:function(input)
+			{
+				var arr = Core.Array.Clone(input);
+				if(arguments.length==1)
+				{
+					for(var step=0;step<arr.length-1;++step)
+					for(var i=0;i<arr.length-step-1;++i)
+					{
+						if(arr[i]<arr[i+1])
+						{
+							var temp = arr[i];
+							arr[i] = arr[i+1];
+							arr[i+1] = temp;
+						}
+					}
+					return;
+				}
+				for(var step=0;step<arr.length-1;++step)
+				for(var i=0;i<arr.length-step-1;++i)
+				{
+					for(var order_by=1;order_by<arguments.length;order_by++)
+					{
+						var left = arguments[order_by](arr[i]);
+						var right = arguments[order_by](arr[i+1]);
+						if(left==right)continue;
+						if(left<right)
+						{
+							var temp = arr[i];
+							arr[i] = arr[i+1];
+							arr[i+1] = temp;
+						}
+						break;
+					}
+				}
+				return arr;
+			},
+			Reverse:function(arr)
+			{
+				var temp = [];
+				for(var i=0;i<arr;i++)
+				{
+					temp[i] = arr[arr.length-i-1];
+				}
+				return temp;
+			}
 		}
 	}
 };
 
 var online = false;
+var socket;
 window.onload = function(){
-	if(socket)
-	{
-		online = true;
-		// server setup
-		while(name==null)
-		{
-			var name = prompt("Enter a name");
-			if(name=="")name = null;
-		}
-		document.title = name+" playing Battalion";
-		socket.username = name;
-		socket.emit("add user", name, "");
-	}
+	if(window.parent)socket = window.parent.socket;
+	if(socket)online = true;
 
 	document.getElementById("endTurn").onchange = function(e){
 		console.error("end turn button state changed",e);
 	};
 	
 	// game setup
-	FRAMERATEDISPLAY = document.getElementById("frames");
+	FRAMERATEDISPLAY = window.parent.document.getElementById("frames");
 	FRAMERATEDISPLAY.value = 0;
 	FRAMERATEDISPLAY.update = 0;
 	Canvas.Add_Ticker(function(){
@@ -369,7 +488,7 @@ window.onload = function(){
 	var starters = getElementsByClass("btnLevelIcon","img");
 	for(var i=0;i<starters.length;i++){
 		starters[i].onclick = function(){
-			new_game(this.id.split("+"));
+			new_game(this.id.split("+"), prompt("Name the game"));
 		};
 	}
 	imageHolderCanvas = initiateCanvas("imageHolder");
@@ -417,23 +536,31 @@ window.onload = function(){
 	Canvas.Next_Tick();
 	mainMenu();
 
-	document.getElementById("loadingOverlay").style.display = "none";
-	document.getElementById("canvasHolder").style.display = "inline";
+	document.getElementById('overlay').style.display = 'none';
 };
+
+function tester()
+{
+var obj = {"id":0,"map":1,"connected":[0,null],"players":[{"name":"TootsieRoller","color":1,"data":{"damage_delt":101,"damage_received":0,"units_gained":8,"units_killed":0,"money_gained":240,"money_spent":0,"turns_alive":1,"buildings_captured":6,"buildings_lost":0},"units":[{"index":5,"x":0,"y":6,"health":40},{"index":6,"x":0,"y":7,"health":70},{"index":7,"x":0,"y":8,"health":70},{"index":6,"x":0,"y":9,"health":70},{"index":7,"x":4,"y":7,"health":70},{"index":11,"x":3,"y":6,"health":140},{"index":13,"x":5,"y":1,"health":70},{"index":13,"x":5,"y":3,"health":70}],"buildings":[{"index":6,"x":0,"y":6,"stature":20,"resources":880},{"index":6,"x":2,"y":7,"stature":20,"resources":880},{"index":5,"x":1,"y":3,"stature":20,"resources":0},{"index":1,"x":3,"y":5,"stature":30,"resources":0},{"index":3,"x":4,"y":0,"stature":20,"resources":0},{"index":2,"x":5,"y":8,"stature":20,"resources":0}]},{"name":"Player 2","color":2,"data":{"damage_delt":0,"damage_received":101,"units_gained":8,"units_killed":0,"money_gained":0,"money_spent":0,"turns_alive":0,"buildings_captured":6,"buildings_lost":0},"units":[{"index":5,"x":7,"y":3,"health":40},{"index":6,"x":8,"y":4,"health":70},{"index":7,"x":9,"y":3,"health":70},{"index":6,"x":9,"y":2,"health":70},{"index":7,"x":7,"y":2,"health":70},{"index":11,"x":6,"y":3,"health":140},{"index":13,"x":4,"y":6,"health":7},{"index":13,"x":4,"y":8,"health":32}],"buildings":[{"index":6,"x":7,"y":2,"stature":20,"resources":1000},{"index":6,"x":9,"y":3,"stature":20,"resources":1000},{"index":5,"x":8,"y":6,"stature":20,"resources":0},{"index":1,"x":6,"y":4,"stature":30,"resources":0},{"index":3,"x":5,"y":9,"stature":20,"resources":0},{"index":2,"x":4,"y":1,"stature":20,"resources":0}]}]};
+var s = JSON.stringify(obj);
+var g = new Engine_Class(s);
+INTERFACE.setGame(g);
+INTERFACE.Draw();
+}
 
 var INTERFACE;
 function init_map(map, players, game_id){
 	document.getElementById("mainMenu").style.display="none";
 	var Game = new Engine_Class(Levels.Terrain(map));
 	Game.id = game_id;
+	Game.Map = map;
 	var UI = new Interface_Class(Levels.Rows(map), Levels.Cols(map), Game);
 	Levels.Run(Game, map);
 	UI.Set_Controls(document.getElementById("inputHandler"));
 	UI.Allow_Controls(true);
-	Canvas.Start_All();
 	Canvas.Set_Game(Game);
 	Canvas.Redraw();
-	document.getElementById("endTurn").style.display = "block";
+	Canvas.Start_All();
 	document.getElementById("endTurn").onclick = function(){
 		if(Game.Client_Player().Active)
 		{
@@ -441,12 +568,17 @@ function init_map(map, players, game_id){
 			if(online)socket.emit('next player', Game.id);
 		}
 	};
-	document.getElementById("menuButton").onclick = function(){
+	window.parent.document.getElementById("menuButton").onclick = function(){
 		if(!confirm("Are you sure?\nYou will lose all current progress"))
 			return;
+		if(online)socket.emit('leave');
 		Game.End_Game();
 	};
 	gameInProgress = true;
+	if(INTERFACE!=null){
+		INTERFACE.Close_Menu();
+		INTERFACE = null;
+	}
 	INTERFACE = UI;
 	Menu.PreGame.Length(Levels.Players(map));
 	Menu.PreGame.Title.State.Set(Levels.Names(map));
@@ -473,23 +605,27 @@ function init_map(map, players, game_id){
 	{
 		Game.Set_Player(0, socket.index, socket.username, true);
 		Menu.PreGame.Set(0, socket.username);
+		Menu.PreGame.AddStarter();
 	}
 	UI.Display_Menu(Menu.PreGame);
 }
-function new_game(level){
+function new_game(level, name){
 	level = parseInt(level);
 	if(!Levels.Unlocked(level))
 	{
 		alert("Level "+(level+1)+" is locked.");
 		return;
 	}
-	Menu.PreGame.AddStarter();
 	init_map(level);
-	if(online)socket.emit("open", level/* , GAME_NAME */);
+	if(online){
+		socket.emit("open", level, (name?name:"UNNAMMED"), Levels.Players(level));
+		window.parent.lobby.contentWindow.add_game(name,level,-1,true);
+		window.parent.lobby.contentWindow._openGames.add();
+	}
 }
 
 function mainMenu(){
-	curently_playing = false;
+	currently_playing = false;
 	Canvas.Stop_All();
 	Animations.Remove_All();
 	Canvas.Run_Next_Tick(function(){
@@ -502,12 +638,12 @@ function mainMenu(){
 		backCanvas.fillRect(0,0,Canvas.Width,Canvas.Height);
 	});
 
-	ITERFACE = null;
 	document.getElementById("endTurn").style.display = "none";
 	document.getElementById("mainMenu").style.display="block";
-	document.getElementById("menuButton").onclick = function(){
+	window.parent.document.getElementById("menuButton").onclick = function(){
 		mainMenu();
 	};
+	window.parent.openLobby();
 	var elements = getElementsByClass("btn_super","div");
 	for(var i=0;i<elements.length;i++)
 	{

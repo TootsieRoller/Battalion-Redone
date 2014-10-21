@@ -1,109 +1,24 @@
 <!DOCTYPE html>
 <html>
-<!--[if !IE]> -->
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 	<link href="includes/css/style.css" rel="stylesheet">
 	<title>Battalion</title>
 </head>
 <body>
-	<div id="imageHolder" style="position:fixed;top:-9999px;left:-9999px;width:500px;height:500px;"></div>
+<!--[if !IE]> -->
 	<div id="container">
-		<div id="loadingOverlay">
-			<br /><br /><br /><br />
-			<center><div style="70px">Loading...</div></center>
-		</div>
-		<div id="canvasHolder">
-			<div class="canvas" id="backgroundCanvas" style="width:810px;height:665px;"></div>
-			<div class="canvas" id="buildingCanvas" style="width:600px;height:600px;"></div>
-			<div class="canvas" id="tileCanvas" style="width:600px;height:600px;"></div>
-			<div class="canvas" id="charCanvas" style="width:600px;height:600px;"></div>
-			<div class="canvas" id="moveUnitCanvas" style="width:600px;height:600px;"></div>
-			<div class="canvas" id="hudCanvas" style="width:810px;height:665px;"></div>
-			<div class="canvas" id="animationCanvas" style="width:810px;height:665px;"></div>
-			<div class="canvas" id="overlayCanvas" style="width:600px;height:600px;"></div>
-			<div class="canvas" id="dialogCanvas" style="width:600px;height:600px;"></div>
-			<div class="canvas" id="avatarCanvas" style="position:absolute;left:645px;width:210px;height:600px;"></div>
-			<div class="canvas" id="statsCanvas" style="position:absolute;top:630px;width:600px;height:65px;"></div>
-			<div class="canvas" id="menuCanvas" style="width:810px;height:665px;"></div>
-			<div class="canvas" id="devCanvas" style="width:810px;height:665px;"></div>
-			<div class="canvas" id="inputHandler" style="width:810px;height:665px;"></div>
-		</div>
-		<div id="mainMenu" style="display:block;">
-			<img id="gameLogo" src="includes/img/Logo.png">
-			<div class="btn_super" id="->levelSelect" onclick="displayNext(this.id);">Open New Game</div><br />
-			<div class="btn_super" id="->htp" onclick="displayNext(this.id);">How to Play</div><br />
-			<div class="btn_super" id="->tut" onclick="displayNext(this.id);">Tutorial</div><br />
-			<div class="btn_super" id="->options" onclick="displayNext(this.id);">Options</div><br />
-			<div class="btn_super" id="->credits" onclick="displayNext(this.id);">Credits</div>
-			<div class="sub_menu" id="levelSelect">
-				<img class="btnLevelIcon" src="includes/img/Icons/unknown.png" id="0">
-					Ampersand
-				</img>
-				<br />
-				<img class="btnLevelIcon" src="includes/img/Icons/unknown.png" id="1">
-					Antipex
-				</img>
-				<br />
-				<img class="btnLevelIcon" src="includes/img/Icons/unknown.png" id="2">
-					Rat Race
-				</img>
-				<br />
-				<img class="btnLevelIcon" src="includes/img/Icons/unknown.png" id="3">
-					Onslaught
-				</img>
-				<br />
-				<div class="btnBack" onclick="backNav(this.parentNode);">Back</div>
-			</div>
-			<div class="sub_menu" id="htp">
-				This game is played with the mouse.<br />
-				Click your units to order them.<br />
-				Click enemy units to see their move and attack range.<br />
-				Scroll with the mouse wheel to zoom.<br />
-				Right click to get popup info.<br />
-				Drag screen with mouse to move map.<br />
-				<br />
-				Mobile controls to be implemented soon.
-				<br /><br />
-				<div class="btnBack" onclick="backNav(this.parentNode);">Back</div>
-			</div>
-			<div class="sub_menu" id="tut">
-				To be added later
-				<br /><br />
-				<div class="btnBack" style="display: block;" onclick="backNav(this.parentNode);">Back</div>
-			</div>
-			<div class="sub_menu" id="options">
-				<div class="btn" style="display: block;" id="sound" onclick="sfxToggle(this);">SFX Off</div>
-				<br /><br />
-				<div class="btn" style="display: block;" onclick="displaySpeed(this);">Speed</div>
-					<div id="fps" style="display:none;" placeholder="30">
-					FPS: <input size="1" placeholder="30" onchange="if(this.value)fps=this.value;else fps=30;"><br />
-					Lower FPS(Frames per Second) makes the game run slower, but is less CUP intensive.<br />
-					Higher FPS makes the game run faster, but is more CPU intensive. <br />
-					Recommended range: <font color="red">20 - 40</font>.
-					</div>
-				<br /><br />
-				<div class="btnBack" style="display: block;" onclick="backNav(this.parentNode);">Back</div>
-			</div>
-			<div class="sub_menu" id="credits">
-				All code written by Elijah Sanford, excluding open source libraries listed in credits page.
-				<br /><br />
-				A <a href="/about">Twins</a> production.
-				<br /><br />
-				<div class="btnBack" onclick="backNav(this.parentNode);">Back</div>
-			</div>
-		</div>
-		<div id="gameHelpers">
-			<div id="frames" style="color:rgb(18, 121, 11);">30/30 FPS</div>
-			<div class="btn" id="menuButton" onclick="(true);">Leave</div>
-			<div class="btn" id="pause" onmousedown="pause();"><pause></pause></div>
-			<div id="data"></div>
-			<div id="endTurn">End Turn</div>
-		</div>
+		<iframe src="login/login.html" id="gameFrame" frameborder="0" name="gameFrame"></iframe>
+	</div>
+	<div id="gameHelpers">
+		<div id="frames" style="color:rgb(18, 121, 11);">30/30 FPS</div>
+		<div class="btn" id="menuButton" onclick="(true);">Leave</div>
+		<div class="btn" id="pause" onmousedown="pause();"><pause></pause></div>
+		<div id="data"></div>
 	</div>
 	<div id="lobbyContainer">
-		<iframe src="includes/lobby.html" id="lobbyFrame" frameborder="0" name="lobbyFrame"></iframe>
-		<center><a href="includes/lobby.html" target="lobbyFrame">Refresh?</a></center>
+		<iframe src="includes/holder.html" id="lobbyFrame" frameborder="0" name="lobbyFrame"></iframe>
+		<center><a id="refreshLobby" href="includes/holder.html" target="lobbyFrame">Refresh?</a></center>
 	</div>
 	<center><div class="selectable" id="footer"><b>
 		<font size="6">Battalion</font><br />
@@ -111,49 +26,15 @@
 		<font size="3">Alpha Version 0.0.0.0.2</font>
 	</b></div></center>
 
-<!-- Open Source Libraries -->
-<script src="includes/js/depend/scroll/Animate.js"></script>
-<script src="includes/js/depend/scroll/Scroller.js"></script>
-<script src="includes/js/depend/scroll/asset/Tiling.js"></script>
-
-<!-- General Game Dependencies -->
-<script src="includes/js/core.js"></script>
-<script src="includes/js/depend/canvas.js"></script>
-<script src="includes/js/depend/shapes.js"></script>
-<script src="includes/js/depend/text.js"></script>
-<script src="includes/js/depend/images.js"></script>
-<script src="includes/js/depend/animation.js"></script>
-<script src="includes/js/depend/dialog.js"></script>
-<script src="includes/js/depend/menu.js"></script>
-
 <!-- Online Client Service -->
 <script src="/socket.io/socket.io.js"></script>
 <script src="client.js"></script>
 
-<!-- Game Specific Code -->
-<script src="includes/js/data/menu_data.js"></script>
-<script src="includes/js/data/img_data.js"></script>
-<script src="includes/js/data/modifiers.js"></script>
-<script src="includes/js/data/building_data.js"></script>
-<script src="includes/js/data/terr_data.js"></script>
-<script src="includes/js/data/char_data.js"></script>
-<script src="includes/js/data/colors.js"></script>
-<script src="includes/js/data/levels.js"></script>
-<script src="includes/js/classes/tileBased/buildings.js"></script>
-<script src="includes/js/classes/tileBased/terrain.js"></script>
-<script src="includes/js/classes/tileBased/char.js"></script>
-<script src="includes/js/classes/tileBased/moves.js"></script>
-<script src="includes/js/classes/tileBased/map.js"></script>
-<script src="includes/js/classes/player.js"></script>
-<script src="includes/js/classes/engine.js"></script>
-<script src="includes/js/classes/ui.js"></script>
-<script src="includes/js/classes/ai.js"></script>
-
 <!--[endif]---->
 <!--[if IE]>
-<br /><br /><br /><br />
-<div align="center">You need <a href="https://www.google.com/intl/en/chrome/browser/">Chrome</a> to play this Game.
-<br />Updates for other browsers coming soon.
+	<br /><br /><br /><br />
+	<div align="center">You need <a href="https://www.google.com/intl/en/chrome/browser/">Chrome</a> to play this Game.
+	<br />Updates for other browsers coming soon.
 <![endif]-->
 </body>
 </html>

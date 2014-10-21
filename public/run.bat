@@ -1,2 +1,7 @@
+@echo off
+title BattalionServer
+:loop
+echo Starting up server...
 node server
-pause
+echo Server closed.
+goto loop

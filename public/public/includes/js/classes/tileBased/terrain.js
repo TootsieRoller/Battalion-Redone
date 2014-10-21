@@ -32,7 +32,7 @@ var Terrain = {
 		};
 
 
-		this.Draw = function(canvas, x, y, zoom, h, state)
+		this.Draw = function(canvas, x, y, zoom)
 		{
 			var img = TerreData.Sprite.Image();
 			TerreData.Sprite.Draw(canvas,x,y,img.width*zoom,img.height*zoom);

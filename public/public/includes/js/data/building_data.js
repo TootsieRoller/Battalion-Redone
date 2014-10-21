@@ -31,10 +31,8 @@ Building_Data.PLACE[CURPLACE++] = {
 	Injuries:0,
 	Height:0,
 	Drag:0,
-	Actable:false,
 	Modifiers:[],
 	Sprite:ERRORIMG,
-	Act:function(){},
 	X:0,
 	Y:0
 };
@@ -52,10 +50,8 @@ Building_Data.PLACE[CURPLACE++] = {
 	Resources:0,
 	Importance:100,
 	Drag:1,
-	Actable:false,
 	Modifiers:[CURMODS.Capture.Insta_Lose],
 	Sprite:null,
-	Act:function(){},
 	X:2,
 	Y:-14
 };
@@ -73,10 +69,8 @@ Building_Data.PLACE[CURPLACE++] = {
 	Resources:0,
 	Importance:50,
 	Drag:1,
-	Actable:false,
 	Modifiers:[CURMODS.Capture.Allow_Ground],
 	Sprite:null,
-	Act:function(){},
 	X:2,
 	Y:4
 };
@@ -94,10 +88,8 @@ Building_Data.PLACE[CURPLACE++] = {
 	Resources:0,
 	Importance:50,
 	Drag:1,
-	Actable:false,
 	Modifiers:[CURMODS.Capture.Allow_Air],
 	Sprite:null,
-	Act:function(){},
 	X:2,
 	Y:-12
 };
@@ -115,10 +107,8 @@ Building_Data.PLACE[CURPLACE++] = {
 	Resources:0,
 	Importance:50,
 	Drag:1,
-	Actable:false,
 	Modifiers:[CURMODS.Capture.Allow_Sea],
 	Sprite:null,
-	Act:function(){},
 	X:2,
 	Y:-11
 };
@@ -136,7 +126,6 @@ Building_Data.PLACE[CURPLACE++] = {
 	Resources:0,
 	Importance:30,
 	Drag:1,
-	Actable:true,
 	Modifiers:[],
 	Sprite:null,
 	Act:function(game, building, input){
@@ -175,10 +164,8 @@ Building_Data.PLACE[CURPLACE++] = {
 	Resources:1000,
 	Importance:20,
 	Drag:1,
-	Actable:false,
 	Modifiers:[CURMODS.Each_Turn.Supply_Income],
 	Sprite:null,
-	Act:function(){},
 	X:2,
 	Y:-8
 };
@@ -196,10 +183,8 @@ Building_Data.PLACE[CURPLACE++] = {
 	Resources:1000,
 	Importance:5,
 	Drag:1,
-	Actable:false,
 	Modifiers:[CURMODS.Each_Turn.Supply_Income],
 	Sprite:null,
-	Act:function(){},
 	X:13,
 	Y:5
 };

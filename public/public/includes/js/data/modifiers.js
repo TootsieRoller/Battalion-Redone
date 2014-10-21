@@ -38,7 +38,7 @@ var Mod_List = {
 				if(unit.Killed!=null)
 				{
 					unit.Idle = false;
-					unit.Active = true;
+					unit.Set_Active(true);
 				}
 			},"Attack","current unit","Can move again if it kills an enemy unit"),
 			Stun:new Mod_Class("Stun",function(unit){

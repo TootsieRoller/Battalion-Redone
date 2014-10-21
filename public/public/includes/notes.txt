@@ -1,7 +1,43 @@
-**testing
-ranged units counter attack should be variable
-if page not focused then wont transmit messages
+ALPHA:
 
+Levels.Draw(0, charCanvas, 0, 0, 100, 100);
+
+***server
+*allow users to change password
+*erase all added db data cause i was testing it a lot
+*each user needs {
+	username,password,email,level,points,totalGames,gamesWon
+}
+
+***testing
+*lancer counter attack should not double
+*ranged units counter attack should be variable
+	in units.Act() -> fix if(current_path.can_attack())
+
+***if page not focused then wont transmit messages
+** fix by having queue of moves, and on focus execute the queue
+
+
+FINAL PRE-RELEASE:
+
+******
+SERVER / LOBBY STUFF
+
+Since the server and the lobby are open to js console messages,
+the server will have to send an excrypted message that the client
+decrypts and sends back in order to validate the message
+
+or else clients will be able to crash the server with open games that dont exist, etc.
+
+******
+
+
+BETA:
+
+// map should include land cutoff when scrolled out of grid
+
+change move data to be based on direction and turn
+unit, dir, moves[(move amt), (turn), etc.]
 
 
 ********* new units:
@@ -15,26 +51,4 @@ if page not focused then wont transmit messages
 
 *spiders cannot be countered
 *stealth tanks should hide
-
-// map should include land cutoff when scrolled out of grid
-
-// search edit
-
-// player.check units
-
-// efficiency
-// instead of player makes move, affecting the game
-// allow 100% access to making moves, so server connects will go faster,
-// only allow user input for their team but dont restrict moves in the engine
-
-change move data to be based on direction and turn
-unit, dir, moves[(move amt), (turn), etc.]
-
-
-// sever attack wont work
-// console server side move + client response
-// player 2 in server data starts as player 1 in game
-// fix order for players on server response
-
-// get rid of global vars
-// rid of INTERFACE -> send game to socket on initialization
+*annihilator tank y pos should be higher

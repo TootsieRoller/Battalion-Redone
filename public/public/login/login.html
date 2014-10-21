@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>How did you get here?</title>
+	<link href="login.css" rel="stylesheet">
+</head>
+<body>
+	<div id="title">Logging in...</div>
+	<div id="data_contents">
+		<input type="text" id="username" placeholder="username"></input>
+		<div id="error" style="display:none;color:red">Error <div id="errno"></div></div>
+		<br />
+		<input type="text" id="pass" placeholder="password"></input>
+		<input id="sendBtn" type="button" onclick="sendMsgBtn()" value="Send"></input>
+	</div>
+	<br />
+	<input id="btnSignup" type="button" onclick="openSignup()" value="Sign up"></input>
+	<script src="login.js"></script>
+</body>
+</html>

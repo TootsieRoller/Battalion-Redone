@@ -1,6 +1,6 @@
 function Image_list_class()
 {
-	var IMG_LOC = "./includes/img/";
+	var IMG_LOC = "./img/";
 	function Image_Class(src,name,callback)
 	{
 		var img;

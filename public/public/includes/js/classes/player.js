@@ -1,5 +1,17 @@
 var Player_Class = function(game, name, team, colors)
 {
+	this.data = {
+		damage_delt:0,
+		damage_received:0,
+		units_gained:0,
+		units_killed:0,
+		money_gained:0,
+		money_spent:0,
+		turns_alive:0,
+		buildings_captured:0,
+		buildings_lost:0
+	};
+
 	var Units = [];
 	var Buildings = [];
 	var charSprites = [];
@@ -37,15 +49,37 @@ var Player_Class = function(game, name, team, colors)
 	this.Team = team;
 	this.Game = game;
 	this.Dead = false;
-	function temp_class(imgData)
+	function ICON_DRAWER(imgData)
 	{
 		this.Draw = function(canvas, x, y)
 		{
+			if(canvas.name=="menuCanvas")console.log(team,name,x,y);
 			var back = canvas.getImageData(x, y, imgData.width, imgData.height);
 			canvas.putImageData(merge(back,imgData), x, y);
 		};
 	};
-	this.Icon = new temp_class(charSprites[1][0]);
+	this.Icon = new ICON_DRAWER(charSprites[1][0]);
+	this.Data = function()
+	{
+		var self = this;
+		var units_data = [];
+		var build_data = [];
+		for(var i in Units)
+		{
+			units_data.push(Units[i].Data());
+		}
+		for(var i in Buildings)
+		{
+			build_data.push(Buildings[i].Data());
+		}
+		return {
+			name:self.Name,
+			color:colors,
+			data:self.data,
+			units:units_data,
+			buildings:build_data
+		};
+	};
 
 	var disallowed_units = [12,13,14,18];
 	var controls = [0,0,0];
@@ -54,6 +88,7 @@ var Player_Class = function(game, name, team, colors)
 	this.Active = false;
 	this.Start_Turn = function(actable)
 	{
+		this.data.turns_alive++;
 		this.Active = true;
 		for(var i in Units)
 		{
@@ -88,6 +123,9 @@ var Player_Class = function(game, name, team, colors)
 
 	this.Add_Income = function(value)
 	{
+		if(value>0)
+			this.data.money_gained+=value;
+		else this.data.money_spent-=value;
 		resources+=value;
 		if(game.Interface!=null)
 			game.Interface.Update_Player_Info();
@@ -173,6 +211,14 @@ var Player_Class = function(game, name, team, colors)
 		}
 		return -1;
 	};
+	this.Next_Active_Building = function()
+	{
+		for(var i in Buildings)
+		{
+			if(Buildings[i].Active)return Buildings[i];
+		}
+		return -1;
+	};
 
 	this.Lose = function()
 	{
@@ -186,6 +232,7 @@ var Player_Class = function(game, name, team, colors)
 
 	this.Capture = function(input)
 	{
+		this.data.buildings_captured++;
 		Buildings.push(input);
 		input.Sprite = placeSprites[input.Source];
 		input.Captured_By(this);
@@ -207,6 +254,7 @@ var Player_Class = function(game, name, team, colors)
 	};
 	this.Lose_Building = function(input)
 	{
+		this.data.buildings_lost++;
 		var pos = Buildings.indexOf(input);
 		if(~pos)
 		{
@@ -218,12 +266,14 @@ var Player_Class = function(game, name, team, colors)
 
 	this.Add_Unit = function(input)
 	{
+		this.data.units_gained++;
 		Units.push(input);
 		input.Player = this;
 		input.Sprites = charSprites[input.Source];
 	};
 	this.Remove_Unit = function(unit)
 	{
+		this.data.units_lost++;
 		var pos = Units.indexOf(unit);
 		if(~pos)
 		{
@@ -231,9 +281,5 @@ var Player_Class = function(game, name, team, colors)
 			return true;
 		}
 		return false;
-	};
-	this.All_Units = function(input)
-	{
-		return Units;
 	};
 };

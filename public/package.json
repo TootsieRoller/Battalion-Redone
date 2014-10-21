@@ -9,5 +9,12 @@
   "dependencies": {
     "express": "3.4.8",
     "socket.io": "^1.0.6"
+  },
+  "subdomain": "tootsiedevelopment-Battalion",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": "0.10.x"
   }
 }

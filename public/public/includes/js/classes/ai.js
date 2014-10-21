@@ -6,7 +6,8 @@ var AI = {
 	// make so char has ui
 	Solve:function(game, chars)
 	{
-		var q = AI.Recursion(game,chars,0);
+		game.Active_Player().End_Turn();
+		/* var q = AI.Recursion(game,chars,0);
 		console.log("ai.q.length = "+q.length);
 		for(var i=0;i<q.length;i++)
 		{
@@ -17,7 +18,7 @@ var AI = {
 					Interface.Slide_Unit(arguments[0],arguments[1],arguments[2]);
 				},[q[i][1],q[i][2],q[i][3]]);
 			}
-		}
+		} */
 	},
 	Recursion:function(game, chars, i)
 	{

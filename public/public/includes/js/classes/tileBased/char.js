@@ -9,7 +9,6 @@ var Characters = {
 
 		var CharData = Char_Data.CHARS[char_index];
 		var name = CharData.Name;
-		var team;
 		var select = Select_Animation.New(animationCanvas, -60, -60, 60, 60, false);
 		this.Description = function()
 		{
@@ -54,6 +53,16 @@ var Characters = {
 		{
 			return CharData.Y[this.State]+tileYOff;
 		};
+		this.Data = function()
+		{
+			var self = this;
+			return {
+				index:char_index,
+				x:self.X,
+				y:self.Y,
+				health:self.Health
+			};
+		};
 
 		var mods = Core.Array.Clone(CharData.Modifiers);
 		var mod_amt = mods.length;
@@ -62,13 +71,14 @@ var Characters = {
 		this.Active = false;
 		this.Set_Active = function(value)
 		{
+			if(!CharData.Actable)return;
 			this.Active = value;
 			select.set({show:value});
 		};
 		this.Draw = function(canvas, x, y, z)
 		{
 			var pic = this.Sprites[this.State];
-			// pic = zoom(pic, z);
+			// var pic = zoom(this.Sprites[this.State], z);
 			if(this.Idle)
 			{
 				pic = darken(pic);
@@ -113,7 +123,7 @@ var Characters = {
 		{
 			if(mover==null)
 			{
-				console.error("mover not defined");
+				console.error("move not defined");
 				return;
 			}
 			var end = [this.X,this.Y];
@@ -145,6 +155,7 @@ var Characters = {
 					unit.Idle = true;
 					game.Interface.Draw();
 					if(!~unit.Player.Next_Active_Unit())
+					if(!~unit.Player.Next_Active_Building())
 					{
 						game.Next_Player();
 					}
@@ -384,6 +395,7 @@ var Characters = {
 						game.Interface.Allow_Controls(true);
 						game.Interface.Draw();
 						if(!~unit.Player.Next_Active_Unit())
+						if(!~unit.Player.Next_Active_Building())
 						{
 							game.Next_Player();
 						}
@@ -391,6 +403,7 @@ var Characters = {
 				}else{
 					game.Interface.Allow_Controls(true);
 					if(!~unit.Player.Next_Active_Unit())
+					if(!~unit.Player.Next_Active_Building())
 					{
 						game.Next_Player();
 					}
@@ -409,9 +422,13 @@ var Characters = {
 		{
 			this.Killed = null;
 			this.Face(defender.X, defender.Y);
+			var damage = this.Calculate_Damage(defender);
+			this.Player.data.damage_delt+=damage;
+			defender.Player.data.damage_received+=damage;
 			defender.Hurt(this.Calculate_Damage(defender));
 			if(defender.Dead)
 			{
+				this.Player.data.units_killed++;
 				this.Killed = defender;
 				if(defender.Player.All_Units().length==0)
 				{

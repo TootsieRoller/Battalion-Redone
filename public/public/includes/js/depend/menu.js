@@ -26,6 +26,10 @@ var Menu = {
 			if(click!=null||right_click!=null)clicks.push([draws.length, click, right_click]);
 			draws.push([drawable, drawable.Source.data, hovered]);
 		};
+		this.Erase = function()
+		{
+			draws = [];
+		}
 		this.Draw = function()
 		{
 			if(this.Background!=null)
