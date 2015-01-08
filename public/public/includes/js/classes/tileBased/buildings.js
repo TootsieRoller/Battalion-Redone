@@ -33,6 +33,8 @@ var Buildings = {
 		this.Income = BuildData.Income;
 		this.X;
 		this.Y;
+		this.dispX = 0;
+		this.dispY = 0;
 		this.X_Offset = function()
 		{
 			return BuildData.X;
@@ -87,32 +89,35 @@ var Buildings = {
 			err("Not a valid index");
 		};
 
-		this.Draw = function(canvas, x, y, zoom)
+		this.Draw = function(canvas, x, y, xScale, yScale)
 		{
 			if(this.Sprite==null)
 			{
 				var img = BuildData.Sprite.Image();
-				BuildData.Sprite.Draw(canvas,x,y,img.width*zoom,img.height*zoom);
+				BuildData.Sprite.Draw(canvas,x,y,img.width*xScale,img.height*yScale);
 			}
 			else
 			{
 				x = Math.floor(x);
 				y = Math.floor(y);
-				// var pic = zoom(this.Sprite, zoom);
 				var pic = this.Sprite;
 				var behind = canvas.getImageData(x, y, pic.width, pic.height);
 				pic = merge(behind, pic);
-				canvas.putImageData(pic, x, y);
+				Canvas.ScaleImageData(canvas, pic, x, y, xScale, yScale);
 			}
 		};
 		this.UI_Draw = function(canvas, x, y, zoom)
 		{
-			this.Draw(canvas,x+this.X_Offset()*zoom,y+this.Y_Offset()*zoom,zoom);
+			this.dispX = x;
+			this.dispY = y;
+			this.Draw(canvas,x+this.X_Offset()*zoom,y+this.Y_Offset()*zoom,zoom,zoom);
 			if(this.Active)
 			{
 				select.set({
 					x:x,
-					y:y
+					y:y,
+					width:60*zoom,
+					height:60*zoom
 				});
 			}
 			if(this.Stature!=BuildData.Stature)
@@ -125,8 +130,12 @@ var Buildings = {
 			}
 			if(this.Resources!=0)
 			{
-				Shape.Rectangle.Draw(canvas, x+5, y+40, 40, 12, "#4B5320");
-				new Text_Class("8pt Times New Roman","#FFF").Draw(canvas, x+7, y+42, 60, 10, "$"+this.Resources);
+				canvas.save();
+				canvas.translate(x, y);
+				canvas.scale(zoom, zoom);
+				Shape.Rectangle.Draw(canvas, 5, 40, 50, 12, "#4B5320");
+				new Text_Class("8pt Times New Roman","#FFF").Draw(canvas, 7, 41, 60, 10, "$"+this.Resources);
+				canvas.restore();
 			}
 		};
 
@@ -169,7 +178,8 @@ var Buildings = {
 			{
 				this.Resources-=amt;
 				if(this.Owner!=null)this.Owner.Add_Income(amt);
-				var risingTxt = HUD_Display.Add_Drawable(new Text_Class("18pt Times New Roman","#0F0"), "Income "+this.X+","+this.Y, this.X*TILESIZE+8-game.Interface.X_Offset(), this.Y*TILESIZE+38-game.Interface.Y_Offset(), 100, 30, "$"+amt);
+				// select.values.x,y
+				var risingTxt = HUD_Display.Add_Drawable(new Text_Class("18pt Times New Roman","#0F0"), "Income "+this.X+","+this.Y, this.dispX+8, this.dispY+38, 100, 30, "$"+amt);
 				Core.Slide_Drawable_Y(risingTxt, -30, 10, function(){
 					Core.Fade_Drawable(risingTxt, 0, 10);
 					Core.Slide_Drawable_Y(risingTxt, -30, 10, function(){

@@ -12,6 +12,10 @@ var Background_Display,
 	Stats_Display;
 var FRAMERATEDISPLAY;
 var lastLoop = new Date;
+var parentFrame = window.parent.document.getElementById('gameFrame');
+
+// SFX.Mute();
+// Music.Mute();
 
 var	fps = 30,
 	paused = false,
@@ -29,7 +33,7 @@ var LOG = {
 		var level = 0;
 		for(var i in this.list)
 		{
-			this.list[i].txt.Draw(devCanvas, 10, (level++)*30, 600, 15, this.list[i].index+": "+this.list[i].msg);
+			this.list[i].txt.Draw(devCanvas, 10, (level++)*30, Canvas.Width-210, 15, this.list[i].index+": "+this.list[i].msg);
 		}
 	},
 	add:function(msg, color, time){
@@ -458,12 +462,8 @@ window.onload = function(){
 	if(window.parent)socket = window.parent.socket;
 	if(socket)online = true;
 
-	document.getElementById("endTurn").onchange = function(e){
-		console.error("end turn button state changed",e);
-	};
-	
 	// game setup
-	FRAMERATEDISPLAY = window.parent.document.getElementById("frames");
+	FRAMERATEDISPLAY = document.getElementById("frames");
 	FRAMERATEDISPLAY.value = 0;
 	FRAMERATEDISPLAY.update = 0;
 	Canvas.Add_Ticker(function(){
@@ -485,12 +485,14 @@ window.onload = function(){
 		}
 	});
 
-	var starters = getElementsByClass("btnLevelIcon","img");
-	for(var i=0;i<starters.length;i++){
-		starters[i].onclick = function(){
-			new_game(this.id.split("+"), prompt("Name the game"));
-		};
-	}
+	// var starters = getElementsByClass("btnLevelIcon","img");
+	// for(var i=0;i<starters.length;i++){
+		// starters[i].onclick = function(){
+			// var gameName = null;
+			// while(!gameName||gameName=="")gameName = prompt("Name the game");
+			// new_game(this.id.split("+"), gameName);
+		// };
+	// }
 	imageHolderCanvas = initiateCanvas("imageHolder");
 
 	backCanvas = initiateCanvas("backgroundCanvas");
@@ -533,55 +535,51 @@ window.onload = function(){
 	Dialog_Display = Canvas.Create_Canvas(dialogCanvas, "dialog");
 	// Dialog = new Dialog_Class(dialogCanvas);
 
-	Canvas.Next_Tick();
+	INTERFACE = new Interface_Class;
+	for(var i in onInterfaceLoadedList){
+		onInterfaceLoadedList[i](INTERFACE);
+	}
+	onInterfaceLoadedList = null;
 	mainMenu();
-
 	document.getElementById('overlay').style.display = 'none';
-};
-
-function tester()
-{
-var obj = {"id":0,"map":1,"connected":[0,null],"players":[{"name":"TootsieRoller","color":1,"data":{"damage_delt":101,"damage_received":0,"units_gained":8,"units_killed":0,"money_gained":240,"money_spent":0,"turns_alive":1,"buildings_captured":6,"buildings_lost":0},"units":[{"index":5,"x":0,"y":6,"health":40},{"index":6,"x":0,"y":7,"health":70},{"index":7,"x":0,"y":8,"health":70},{"index":6,"x":0,"y":9,"health":70},{"index":7,"x":4,"y":7,"health":70},{"index":11,"x":3,"y":6,"health":140},{"index":13,"x":5,"y":1,"health":70},{"index":13,"x":5,"y":3,"health":70}],"buildings":[{"index":6,"x":0,"y":6,"stature":20,"resources":880},{"index":6,"x":2,"y":7,"stature":20,"resources":880},{"index":5,"x":1,"y":3,"stature":20,"resources":0},{"index":1,"x":3,"y":5,"stature":30,"resources":0},{"index":3,"x":4,"y":0,"stature":20,"resources":0},{"index":2,"x":5,"y":8,"stature":20,"resources":0}]},{"name":"Player 2","color":2,"data":{"damage_delt":0,"damage_received":101,"units_gained":8,"units_killed":0,"money_gained":0,"money_spent":0,"turns_alive":0,"buildings_captured":6,"buildings_lost":0},"units":[{"index":5,"x":7,"y":3,"health":40},{"index":6,"x":8,"y":4,"health":70},{"index":7,"x":9,"y":3,"health":70},{"index":6,"x":9,"y":2,"health":70},{"index":7,"x":7,"y":2,"health":70},{"index":11,"x":6,"y":3,"health":140},{"index":13,"x":4,"y":6,"health":7},{"index":13,"x":4,"y":8,"health":32}],"buildings":[{"index":6,"x":7,"y":2,"stature":20,"resources":1000},{"index":6,"x":9,"y":3,"stature":20,"resources":1000},{"index":5,"x":8,"y":6,"stature":20,"resources":0},{"index":1,"x":6,"y":4,"stature":30,"resources":0},{"index":3,"x":5,"y":9,"stature":20,"resources":0},{"index":2,"x":4,"y":1,"stature":20,"resources":0}]}]};
-var s = JSON.stringify(obj);
-var g = new Engine_Class(s);
-INTERFACE.setGame(g);
-INTERFACE.Draw();
-}
-
-var INTERFACE;
-function init_map(map, players, game_id){
-	document.getElementById("mainMenu").style.display="none";
-	var Game = new Engine_Class(Levels.Terrain(map));
-	Game.id = game_id;
-	Game.Map = map;
-	var UI = new Interface_Class(Levels.Rows(map), Levels.Cols(map), Game);
-	Levels.Run(Game, map);
-	UI.Set_Controls(document.getElementById("inputHandler"));
-	UI.Allow_Controls(true);
-	Canvas.Set_Game(Game);
-	Canvas.Redraw();
-	Canvas.Start_All();
-	document.getElementById("endTurn").onclick = function(){
-		if(Game.Client_Player().Active)
-		{
-			Game.Client_Player().End_Turn();
-			if(online)socket.emit('next player', Game.id);
-		}
-	};
-	window.parent.document.getElementById("menuButton").onclick = function(){
+	document.getElementById("menuButton").onclick = function(){
 		if(!confirm("Are you sure?\nYou will lose all current progress"))
 			return;
 		if(online)socket.emit('leave');
-		Game.End_Game();
+		INTERFACE.Game.End_Game();
 	};
+	document.getElementById("endTurn").onclick = function(){
+		if(!INTERFACE.Game)return;
+		if(INTERFACE.Game.Client_Player().Active)
+		{
+			if(online)socket.emit('next player', JSON.stringify(INTERFACE.Game.Data()));
+			INTERFACE.Game.Client_Player().End_Turn();
+		}
+	};
+	Canvas.Reflow();
+	Canvas.Next_Tick();
+};
+
+var INTERFACE;
+var onInterfaceLoadedList = [];
+function onInterfaceLoaded(fnc){
+	if(onInterfaceLoadedList==null)return;
+	onInterfaceLoadedList.push(fnc);
+}
+function init_map(map, players, game_id){
+	document.getElementById("mainMenu").style.display="none";
+	var Game = new Engine_Class(map);
+	Game.id = game_id;
+	Game.Map = map;
+	INTERFACE.Close_Menu();
+	INTERFACE.setGame(Game);
+	INTERFACE.Set_Controls(document.getElementById("inputHandler"));
+	INTERFACE.Allow_Controls(true);
+	Canvas.Set_Game(Game);
+	Canvas.Redraw();
+	Canvas.Start_All();
 	gameInProgress = true;
-	if(INTERFACE!=null){
-		INTERFACE.Close_Menu();
-		INTERFACE = null;
-	}
-	INTERFACE = UI;
-	Menu.PreGame.Length(Levels.Players(map));
-	Menu.PreGame.Title.State.Set(Levels.Names(map));
+	Menu.PreGame.Map(map);
 	if(players!=null)
 	{
 		var set = false;
@@ -607,9 +605,10 @@ function init_map(map, players, game_id){
 		Menu.PreGame.Set(0, socket.username);
 		Menu.PreGame.AddStarter();
 	}
-	UI.Display_Menu(Menu.PreGame);
+	INTERFACE.Display_Menu(Menu.PreGame);
 }
 function new_game(level, name){
+	if(!name)return;
 	level = parseInt(level);
 	if(!Levels.Unlocked(level))
 	{
@@ -618,10 +617,32 @@ function new_game(level, name){
 	}
 	init_map(level);
 	if(online){
-		socket.emit("open", level, (name?name:"UNNAMMED"), Levels.Players(level));
+		socket.emit("open", level, name, Levels.Players(level));
 		window.parent.lobby.contentWindow.add_game(name,level,-1,true);
 		window.parent.lobby.contentWindow._openGames.add();
 	}
+}
+function load_game(gameData){
+	document.getElementById("mainMenu").style.display="none";
+	var Game = new Engine_Class(gameData);
+	if(!Game.valid)return;
+	INTERFACE.Close_Menu();
+	INTERFACE.setGame(Game);
+	INTERFACE.Set_Controls(document.getElementById("inputHandler"));
+	INTERFACE.Allow_Controls(true);
+	Canvas.Set_Game(Game);
+	Canvas.Redraw();
+	Canvas.Start_All();
+	gameInProgress = true;
+	Game.Start();
+}
+
+function openLevelSelect(){
+	document.getElementById("mainMenu").style.display="none";
+	INTERFACE.Close_Menu();
+	INTERFACE.Set_Controls(document.getElementById("inputHandler"));
+	INTERFACE.Allow_Controls(true);
+	INTERFACE.Display_Menu(Menu.LevelSelect);
 }
 
 function mainMenu(){
@@ -637,12 +658,9 @@ function mainMenu(){
 		backCanvas.fillStyle = "#77a8bc";
 		backCanvas.fillRect(0,0,Canvas.Width,Canvas.Height);
 	});
+	INTERFACE.Close_Menu();
 
-	document.getElementById("endTurn").style.display = "none";
 	document.getElementById("mainMenu").style.display="block";
-	window.parent.document.getElementById("menuButton").onclick = function(){
-		mainMenu();
-	};
 	window.parent.openLobby();
 	var elements = getElementsByClass("btn_super","div");
 	for(var i=0;i<elements.length;i++)
@@ -653,6 +671,17 @@ function mainMenu(){
 	for(var i=0;i<elements.length;i++)
 	{
 		elements[i].style.display = "none";
+	}
+}
+
+var paused = false;
+function pause(){
+	if(paused){
+		paused = false;
+		document.getElementById("pause").innerHTML = "<pause></pause>";
+	}else{
+		paused = true;
+		document.getElementById("pause").innerHTML = "<play></play>";
 	}
 }
 

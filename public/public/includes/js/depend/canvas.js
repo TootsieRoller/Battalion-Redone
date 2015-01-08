@@ -13,6 +13,8 @@ var Canvas_Handler_Class = function(canvas, name)
 	var kill = true;
 	var wipe = false;
 	var imageData;
+	var xScale = 1;
+	var yScale = 1;
 	this.X_Offset = 0;
 	this.Y_Offset = 0;
 	this.Context = canvas;
@@ -28,13 +30,16 @@ var Canvas_Handler_Class = function(canvas, name)
 			var cur = Drawables[draw_que[i][0]];
 			if(cur.Style.Get()==0)
 			{
-				cur.Clear(canvas);
+				// cur.Clear(canvas);
+				Canvas.Drawer(canvas, cur, function(canvas, cur, x, y){
+					canvas.clearRect(x,y,cur.Width.Get(),cur.Height.Get());
+				}, xScale, yScale);
 			}
 			else if(cur.Style.Get()==1)
 			{
 				Canvas.Drawer(canvas, cur, function(canvas, cur, x, y){
 					canvas.Display.Background.Source.Get().Draw(canvas,x,y,cur.Width.Get(),cur.Height.Get(),canvas.Display.Background.State.Get());
-				});
+				}, xScale, yScale);
 			}
 			var quick = draw_que[i][1];
 			for(var j=0;j<quick.length;j+=2)
@@ -42,7 +47,7 @@ var Canvas_Handler_Class = function(canvas, name)
 				quick[j].data = quick[j+1];
 			Canvas.Drawer(canvas, cur, function(canvas, cur, x, y){
 				cur.Source.Get().Draw(canvas,x,y,cur.Width.Get(),cur.Height.Get(),cur.State.Get());
-			});
+			}, xScale, yScale);
 		}
 		draw_que = [];
 	};
@@ -95,12 +100,12 @@ var Canvas_Handler_Class = function(canvas, name)
 	{
 		if(src==null)
 		{
-			console.error("No information sent.")
+			if(Canvas.errReport)console.error("No information sent.")
 			return;
 		}
 		if(!src.Draw)
 		{
-			console.error("No drawable data present.");
+			if(Canvas.errReport)console.error("No drawable data present.");
 			return;
 		}
 		var draw_index = draw_counter++;
@@ -108,7 +113,7 @@ var Canvas_Handler_Class = function(canvas, name)
 		{
 			src.Redraw = function()
 			{
-				Queue(index);
+				Queue(draw_index);
 			};
 			Drawables[draw_index] = src;
 			Queue(draw_index);
@@ -119,14 +124,14 @@ var Canvas_Handler_Class = function(canvas, name)
 		if(an==null)an=0;
 		if(name==null)
 		{
-			name = "UNNAMMED DRAWABLE "+draw_index;
-			console.error("No name defined. Name set to "+name);
+			name = "UNNAMMED"+draw_index;
+			if(Canvas.errReport)console.error("No name defined. Name set to "+name);
 		}
 		else for(var i=0;i<draw_index;i++)
 		{
 			if(Drawables[i].Name==name)
 			{
-				console.error("Name "+name+" already declared in canvas "+this.Name+". Overwriting");
+				if(Canvas.errReport)console.error("Name "+name+" already declared in canvas "+this.Name+". Overwriting");
 				draw_index = i;
 				break;
 			}
@@ -138,7 +143,7 @@ var Canvas_Handler_Class = function(canvas, name)
 		drawable.Name = name;
 		drawable.Redraw = function()
 		{
-			Queue(index);
+			Queue(draw_index);
 		};
 		Drawables[draw_index] = drawable;
 		Queue(draw_index);
@@ -148,7 +153,7 @@ var Canvas_Handler_Class = function(canvas, name)
 	{
 		if(i>=draw_counter)
 		{
-			console.error("Drawable index of "+i+" does not exist.");
+			if(Canvas.errReport)console.error("Drawable index of "+i+" does not exist.");
 			return null;
 		}
 		return Drawables[i];
@@ -196,10 +201,15 @@ var Canvas_Handler_Class = function(canvas, name)
 				}
 			}
 		}
-		console.error("Drawable index of "+index+" does not exist.");
+		if(Canvas.errReport)console.error("Drawable index of "+index+" does not exist.");
 		return false;
 	};
 
+	this.Scale = function(x, y)
+	{
+		xScale = x;
+		yScale = y;
+	};
 	this.Slide_X = function(amt)
 	{
 		this.X_Offset+=amt;
@@ -285,29 +295,36 @@ var Info = function(_d, parent, changed)
 	};
 };
 var Canvas = {
-	Drawer:function(canvas, drawable, func)
+	errReport:false,
+	Drawer:function(canvas, drawable, func, xScale, yScale)
 	{
 		canvas.save();
+		if(!xScale)xScale=1;
+		if(!yScale)yScale=1;
 		var X = drawable.X.Get();
 		var Y = drawable.Y.Get();
+		var Width = drawable.Width.Get();
+		var Height = drawable.Height.Get();
 		if(canvas.Display!=null)
 		{
 			X-=canvas.Display.X_Offset;
 			Y-=canvas.Display.Y_Offset;
 		}
-		if(drawable.Invert_X.Get()&&drawable.Width.Get()!=null)
+		if(drawable.Invert_X.Get()&&Width!=null)
 		{
-			canvas.translate(drawable.Width.Get(),0);
+			canvas.translate(Width,0);
 			canvas.scale(-1,1);
 			X*=-1;
 		}
-		if(drawable.Invert_Y.Get()&&drawable.Height.Get()!=null)
+		if(drawable.Invert_Y.Get()&&Height!=null)
 		{
-			canvas.translate(0,drawable.Height.Get());
+			canvas.translate(0,Height);
 			canvas.scale(1,-1);
 			Y*=-1;
 		}
+		canvas.scale(xScale,yScale);
 		canvas.globalAlpha = drawable.Alpha.Get();
+		if(typeof drawable.Angle.Get()!=='undefined')
 		if(drawable.Angle.Get()%360!=0)
 		{
 			canvas.translate(X,Y);
@@ -320,6 +337,12 @@ var Canvas = {
 	},
 	Drawable:function(src, changed, x, y, w, h, sta, sty, alp, ang)
 	{
+		if(changed==null||typeof changed==="undefined"){
+			changed = function(index,info,input){
+				info.data = input;
+				index.Draw();
+			};
+		}
 		this.drawable_class = true;
 		this.Index = null;
 		this.Source = new Info(src, this, changed);
@@ -335,7 +358,7 @@ var Canvas = {
 		this.Angle = new Info(ang, this, changed);
 		this.Draw = function(canvas, func)
 		{
-			if(!func)func = function(canvas, drawable, x, y){
+			if(typeof func!=='function')func = function(canvas, drawable, x, y){
 				drawable.Source.Get().Draw(canvas,x,y,drawable.Width.Get(),drawable.Height.Get(),drawable.State.Get());
 			};
 			Canvas.Drawer(canvas, this, func);
@@ -347,16 +370,30 @@ var Canvas = {
 			});
 		};
 	},
+	ScaleImageData:function(canvas, imageData, x, y, xScale, yScale){
+		if(!xScale)xScale=Canvas.Width/Canvas.MaxWidth;
+		if(!yScale)yScale=Canvas.Height/Canvas.MaxHeight;
+		canvas.putImageData(scale(imageData, xScale, yScale), x, y);
+	},
 	Contexts:[],
 	Clear:0,
 	Background:1,
 	Merge:2,
 	Height:665,
 	Width:810,
+	MaxHeight:665,
+	MaxWidth:810,
 	Kill:false,
 	Canvas_List:[],
 	Tick_Functions:[],
 	Temp_Ticks:[],
+	Reflow:function(){
+		Canvas.Width = parentFrame.clientWidth;
+		Canvas.Height = parentFrame.clientHeight;
+		if(INTERFACE){
+			INTERFACE.reflow(Canvas.Width, Canvas.Height);
+		}
+	},
 	Run_Next_Tick:function(fnc){
 		Canvas.Temp_Ticks[Canvas.Temp_Ticks.length] = fnc;
 	},
@@ -448,8 +485,20 @@ var Canvas = {
 		{
 			Canvas.Canvas_List[i].Set_Game(game);
 		}
+	},
+	overlappingDrawable:function(drawable, x, y){
+		// x*=Canvas.Width/Canvas.MaxWidth;
+		// y*=Canvas.Height/Canvas.MaxHeight;
+		if(x>=drawable.X.data)
+		if(x<drawable.X.data+drawable.Width.data)
+		if(y>=drawable.Y.data)
+		if(y<drawable.Y.data+drawable.Height.data)
+			return true;
+		return false;
 	}
 };
+
+window.addEventListener("resize", Canvas.Reflow, false);
 
 function initiateCanvas(name){
 	var element = document.getElementById(name),

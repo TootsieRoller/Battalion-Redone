@@ -8,7 +8,8 @@ var Terrain = {
 		this.SELECTABLE = 2;
 
 		var TerreData = Terrain_Data.TERRE[terre_index];
-		var actions = [];
+		var mods = Core.Array.Clone(TerreData.Modifiers);
+		var mod_amt = mods.length;
 
 		this.Building = null;
 		this.Unit = null;
@@ -62,44 +63,37 @@ var Terrain = {
 			return new Terre_Class(engine,terre_index,x,y);
 		};
 
-		this.Action_Amt = function()
+		
+		this.Mods_By_Type = function(type)
 		{
-			return actions.length;
-		}
-		this.Action = function(i)
-		{
-			return actions[i];
-		}
-		this.Add_Action = function(value)
-		{
-			actions[actions.length] = value;
-		}
-		this.Del_Action = function(value)
-		{
-			var found = false;
-			var last_index;
-			for(var i in actions)
+			var cur = [];
+			for(var i=0;i<mod_amt;i++)
 			{
-				if(index!=i.substring(2,i.length))
-				{
-					if(found)
-					{
-						actions[last_index] = actions[i];
-						last_index = i;
-					}
-					continue;
-				}
-				if(i.substring(0,2)=="A_")
-				{
-					delete actions[i];
-					found = true;
-					last_index = i;
-				}
+				if(mods[i].Type==type)
+					cur.push(mods[i]);
 			}
-			if(!found)
-			{
-				err("Could not find index to delete.");
-			}
+			return cur;
+		};
+		this.Modifier_Amt = function()
+		{
+			return mod_amt;
+		}
+		this.Modifier = function(i)
+		{
+			if(i<mod_amt&&i>=0)
+				return mods[i];
+			err("Not a valid index");
+			return null;
+		}
+		this.Add_Modifier = function(value)
+		{
+			mods[mod_amt++] = value;
+		}
+		this.Del_Modifier = function(value)
+		{
+			if(i<mod_amt&&i>=0)
+				mods[value] = mods[--mod_amt];
+			err("Not a valid index");
 		}
 	},
 	New:function(Game, name, x, y)

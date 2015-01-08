@@ -5,12 +5,11 @@ function Image_list_class()
 	{
 		var img;
 		var loaded;
-		var stretchable = false;
+		var stretchable = true;
 		if(src.Draw)
 		{
 			loaded = true;
 			img = src.Image();
-			
 			callback();
 		}
 		else
@@ -75,7 +74,7 @@ function Image_list_class()
 	};
 	this.Delete = function(name)
 	{
-		return Core.Remove_Array_Index(Images,index);
+		return Core.Remove_Array_Index(Images,name);
 	};
 	this.Retrieve = function(name)
 	{

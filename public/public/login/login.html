@@ -5,15 +5,16 @@
 	<link href="login.css" rel="stylesheet">
 </head>
 <body>
-	<div id="title">Logging in...</div>
+	<div id="title">Logging in...</div><br />
 	<div id="data_contents">
-		<input type="text" id="username" placeholder="username"></input>
+		<input type="text" id="username" placeholder="username"></input>&nbsp;&nbsp;
 		<div id="error" style="display:none;color:red">Error <div id="errno"></div></div>
 		<br />
-		<input type="text" id="pass" placeholder="password"></input>
-		<input id="sendBtn" type="button" onclick="sendMsgBtn()" value="Send"></input>
+		<input type="text" id="pass" placeholder="password"></input>&nbsp;&nbsp;
+		Stay signed on?	<input type="checkbox" id="staySignedOn"><br />
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id="sendBtn" type="button" onclick="sendMsgBtn()" value="Go"></input>
 	</div>
-	<br />
+	<br /><br />
 	<input id="btnSignup" type="button" onclick="openSignup()" value="Sign up"></input>
 	<script src="login.js"></script>
 </body>

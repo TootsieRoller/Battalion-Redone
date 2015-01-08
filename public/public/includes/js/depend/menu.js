@@ -1,101 +1,110 @@
-function overlapping(drawable, x, y)
-{
-	if(x>=drawable.X.data)
-	if(x<drawable.X.data+drawable.Width.data)
-	if(y>=drawable.Y.data)
-	if(y<drawable.Y.data+drawable.Height.data)
-		return true;
-	return false;
-}
-
 var Menu = {
-	Setter:function(index,info,input){
-		info.data = input;
-		index.Draw();
-	},
-	Menu_Class:function()
+	Menu_Class:function(bgInput)
 	{
 		var draws = [];
 		var clicks = [];
 		var hovered = -1;
 		var clickPos = -1;
-		this.Background = null;
-		this.Add = function(drawable, click, hovered, right_click)
+		var self = this;
+		self.xScale = 1;
+		self.yScale = 1;
+		if(typeof bgInput==='undefined')bgInput=null;
+		self.Background = bgInput;
+		self.Add = function(drawable, click, hovered, right_click)
 		{
 			if(drawable==null)return;
 			if(click!=null||right_click!=null)clicks.push([draws.length, click, right_click]);
 			draws.push([drawable, drawable.Source.data, hovered]);
 		};
-		this.Erase = function()
+		self.Erase = function()
 		{
 			draws = [];
 		}
-		this.Draw = function()
+		self.Draw = function()
 		{
-			if(this.Background!=null)
+			menuCanvas.save();
+			menuCanvas.scale(self.xScale, self.yScale);
+			if(self.Background!=null)
 			{
-				if(this.Background.Draw)
+				if(self.Background.Draw)
 				{
-					this.Background.Draw(menuCanvas, 0, 0, menuCanvas.width, menuCanvas.height);
+					self.Background.Draw(menuCanvas, 0, 0, menuCanvas.width, menuCanvas.height);
 				}
-				else
+				else if(typeof self.Background==='string')
 				{
-					Shape.Rectangle.Draw(menuCanvas, 0, 0, menuCanvas.width, menuCanvas.height, this.Background);
+					Shape.Rectangle.Draw(menuCanvas, 0, 0, menuCanvas.width, menuCanvas.height, self.Background);
 				}
 			}
 			for(var i in draws)
 			{
 				draws[i][0].Draw(menuCanvas);
 			}
+			menuCanvas.restore();
 		};
-		this.Close = function()
+		self.Scale = function(x, y)
+		{
+			self.xScale = x;
+			self.yScale = y;
+			self.Draw();
+		};
+		self.Close = function()
 		{
 			hovered = -1;
 			menuCanvas.clearRect(0, 0, menuCanvas.width, menuCanvas.height);
 		};
-		this.Click = function(x, y)
+		self.Click = function(x, y)
 		{
+			x/=self.xScale;
+			y/=self.yScale;
 			clickPos = [x,y];
 		};
-		this.Release = function(x, y)
+		self.Release = function(x, y)
 		{
+			x/=self.xScale;
+			y/=self.yScale;
 			if(~clickPos)
 			if(Math.abs(x-clickPos[0])<5&&Math.abs(y-clickPos[1])<5)
 			for(var i=clicks.length-1;i>=0;i--)
 			{
 				var cur = clicks[i];
-				if(overlapping(draws[cur[0]][0], x, y))
+				if(Canvas.overlappingDrawable(draws[cur[0]][0], x, y))
 				{
 					if(!cur[1])continue;
-					cur[1]();
+					cur[1](draws[cur[0]][0].State.data);
 					return;
 				}
 			}
 			clickPos = -1;
 		};
-		this.Right_Click = function(x, y)
+		self.Right_Click = function(x, y)
 		{
+			x/=self.xScale;
+			y/=self.yScale;
 			for(var i=clicks.length-1;i>=0;i--)
 			{
 				var cur = clicks[i];
-				if(overlapping(draws[cur[0]][0], x, y))
+				if(Canvas.overlappingDrawable(draws[cur[0]][0], x, y))
 				{
 					if(!cur[2])continue;
-					cur[2]();
+					cur[2](draws[cur[0]][0].State.data);
 					return;
 				}
 			}
 		};
-		this.Mouse_Move = function(x, y)
+		self.Mouse_Move = function(x, y)
 		{
+			x/=self.xScale;
+			y/=self.yScale;
 			if(~hovered)
 			{
 				var cur = draws[hovered];
-				if(!overlapping(cur[0], x, y))
+				if(!Canvas.overlappingDrawable(cur[0], x, y))
 				{
+					menuCanvas.save();
+					menuCanvas.scale(self.xScale, self.yScale);
 					cur[0].Source.data = cur[1];
-					// cur[0].Clear(menuCanvas);
 					cur[0].Draw(menuCanvas);
+					menuCanvas.restore();
 					hovered = -1;
 				}
 				return;
@@ -104,11 +113,13 @@ var Menu = {
 			{
 				var cur = draws[i];
 				if(!cur[2])continue;
-				if(overlapping(cur[0], x, y))
+				if(Canvas.overlappingDrawable(cur[0], x, y))
 				{
+					menuCanvas.save();
+					menuCanvas.scale(self.xScale, self.yScale);
 					cur[0].Source.data = cur[2];
-					// cur[0].Clear(menuCanvas);
 					cur[0].Draw(menuCanvas);
+					menuCanvas.restore();
 					hovered = i;
 					return;
 				}

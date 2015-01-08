@@ -15,12 +15,18 @@ function Animation_Display_Class()
 			this.set = function(update)
 			{
 				var ani = this.values;
-				if(ani.show)holder.Clear(ani.canvas, ani.x, ani.y, ani.width, ani.height);
+				if(ani.show)
+				{
+					holder.Clear(ani.canvas, ani.x, ani.y, ani.width, ani.height);
+				}
 				for(var i in update)
 				{
 					ani[i] = update[i];
 				}
-				if(ani.show)holder.Draw(ani.canvas, ani.x, ani.y, ani.width, ani.height);
+				if(ani.show)
+				{
+					holder.Draw(ani.canvas, ani.x, ani.y, ani.width, ani.height);
+				}
 			};
 			this.values = {
 				canvas:C,

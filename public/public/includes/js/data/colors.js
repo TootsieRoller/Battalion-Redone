@@ -63,28 +63,29 @@ function flipX(img)
 	return img;
 }
 
-function darken(img)
+function darken(img, amt)
 {
+	if(!amt)amt=.7;
 	var temp = imageHolderCanvas.createImageData(img.width,img.height);
 	for(var i=0;i<img.data.length;i+=4)
 	{
-		temp.data[i] = img.data[i]*.7;
-		temp.data[i+1] = img.data[i+1]*.7;
-		temp.data[i+2] = img.data[i+2]*.7;
+		temp.data[i] = img.data[i]*amt;
+		temp.data[i+1] = img.data[i+1]*amt;
+		temp.data[i+2] = img.data[i+2]*amt;
 		temp.data[i+3] = img.data[i+3];
 	}
 	return temp;
 }
 
-function zoom(img, scale)
+function scale(img, xScale, yScale)
 {
-	var widthScaled = Math.floor(img.width*scale);
-	var heightScaled = Math.floor(img.height*scale);
+	var widthScaled = Math.floor(img.width*xScale);
+	var heightScaled = Math.floor(img.height*yScale);
 	var temp = imageHolderCanvas.createImageData(widthScaled, heightScaled);
 	for(var y=0;y<heightScaled;y++)
 	for(var x=0;x<widthScaled;x++)
 	{
-		var index = (Math.floor(y/scale)*img.width+Math.floor(x/scale))*4;
+		var index = (Math.floor(y/yScale)*img.width+Math.floor(x/xScale))*4;
 		var indexScaled = (y*widthScaled+x)*4;
 		temp.data[indexScaled] = img.data[index];
 		temp.data[indexScaled+1] = img.data[index+1];
@@ -92,6 +93,10 @@ function zoom(img, scale)
 		temp.data[indexScaled+3] = img.data[index+3];
 	}
 	return temp;
+}
+function zoom(img, z)
+{
+	return scale(img, z, z);
 }
 
 function merge(img1, img2)

@@ -9,13 +9,16 @@ var Characters = {
 
 		var CharData = Char_Data.CHARS[char_index];
 		var name = CharData.Name;
+		var attkSFX = CharData.AttackSFX;
+		var moveSFX = CharData.MoveSFX;
 		var select = Select_Animation.New(animationCanvas, -60, -60, 60, 60, false);
+		var mods = Core.Array.Clone(CharData.Modifiers);
+		var mod_amt = mods.length;
 		this.Description = function()
 		{
 			return CharData.Description;
 		};
 		this.Index = null;
-
 
 		this.Terrain = function()
 		{
@@ -34,7 +37,7 @@ var Characters = {
 		this.Movement = CharData.Movement;
 		this.Move_Type = CharData.Move_Type;
 		this.Slow_Attack = CharData.Slow;
-		this.Range = CharData.Range;
+		this.Range = Core.Array.Clone(CharData.Range);
 		this.Player = null;
 		this.Attacking = null;
 		this.Killed = null;
@@ -64,9 +67,6 @@ var Characters = {
 			};
 		};
 
-		var mods = Core.Array.Clone(CharData.Modifiers);
-		var mod_amt = mods.length;
-
 		this.display_health = true;
 		this.Active = false;
 		this.Set_Active = function(value)
@@ -75,19 +75,22 @@ var Characters = {
 			this.Active = value;
 			select.set({show:value});
 		};
-		this.Draw = function(canvas, x, y, z)
+		this.Draw = function(canvas, x, y, xScale, yScale)
 		{
 			var pic = this.Sprites[this.State];
-			// var pic = zoom(this.Sprites[this.State], z);
 			if(this.Idle)
 			{
 				pic = darken(pic);
 			}
-			canvas.putImageData(pic,x,y);
+			var behind = canvas.getImageData(x, y, pic.width, pic.height);
+			var NotNullCheck = merge(behind, pic);
+			if(NotNullCheck!=null)
+				pic = NotNullCheck;
+			Canvas.ScaleImageData(canvas, pic, x, y, xScale, yScale);
 		};
 		this.UI_Draw = function(canvas, x, y, zoom)
 		{
-			this.Draw(canvas,x+this.X_Offset()*zoom,y+this.Y_Offset()*zoom,zoom);
+			this.Draw(canvas,x+this.X_Offset()*zoom,y+this.Y_Offset()*zoom,zoom,zoom);
 			if(this.Health<=0)return;
 			if(this.display_health)
 			if(this.Health!=this.Max_Health)
@@ -108,13 +111,18 @@ var Characters = {
 			}
 			if(CharData.Additional_Display)
 			{
+				overlayCanvas.save();
+				overlayCanvas.scale(zoom, zoom);
 				CharData.Additional_Display(overlayCanvas, x, y);
+				overlayCanvas.restore();
 			}
 			if(this.Active)
 			{
 				select.set({
 					x:x,
-					y:y
+					y:y,
+					width:60*zoom,
+					height:60*zoom
 				});
 			}
 		};
@@ -297,28 +305,28 @@ var Characters = {
 		};
 		this.Up = function(callback){
 			this.Face_Up();
-			var amt = TILESIZE/6;
+			var amt = TILESIZE/6*INTERFACE.zoom;
 			recur_slide(function(){
 				tileYOff-=amt;
 			},6,callback);
 		};
 		this.Down = function(callback){
 			this.Face_Down();
-			var amt = TILESIZE/6;
+			var amt = TILESIZE/6*INTERFACE.zoom;
 			recur_slide(function(){
 				tileYOff+=amt;
 			},6,callback);
 		};
 		this.Left = function(callback){
 			this.Face_Left();
-			var amt = TILESIZE/6;
+			var amt = TILESIZE/6*INTERFACE.zoom;
 			recur_slide(function(){
 				tileXOff-=amt;
 			},6,callback);
 		};
 		this.Right = function(callback){
 			this.Face_Right();
-			var amt = TILESIZE/6;
+			var amt = TILESIZE/6*INTERFACE.zoom;
 			recur_slide(function(){
 				tileXOff+=amt;
 			},6,callback);
@@ -335,6 +343,7 @@ var Characters = {
 		};
 		this.Move_To = function(mover, end, callback)
 		{
+			moveSFX.Play();
 			this.Move_From();
 			game.Interface.Set_Moving_Unit(this);
 			game.Interface.Allow_Controls(false);
@@ -343,6 +352,7 @@ var Characters = {
 			var oldX = this.X;
 			var oldY = this.Y;
 			this.Animate_Move(mover,function(unit){
+				moveSFX.Stop();
 				game.Units_Map.Set(oldX,oldY,null);
 				game.Units_Map.Set(unit.X,unit.Y,unit);
 				game.Interface.Allow_Controls(true);
@@ -354,7 +364,7 @@ var Characters = {
 				{
 					b.Set_Active(false);
 				}
-				var available = unit.Mods_By_Type("Properties");
+				var available = unit.Terrain().Mods_By_Type("Properties");
 				for(var i=0;i<available.length;i++)
 				{
 					available[i].Do(unit);
@@ -420,6 +430,7 @@ var Characters = {
 		};
 		this.Attack = function(defender, callback)
 		{
+			if(attkSFX)attkSFX.Play(1000);
 			this.Killed = null;
 			this.Face(defender.X, defender.Y);
 			var damage = this.Calculate_Damage(defender);
@@ -430,10 +441,6 @@ var Characters = {
 			{
 				this.Player.data.units_killed++;
 				this.Killed = defender;
-				if(defender.Player.All_Units().length==0)
-				{
-					defender.Player.Lose();
-				}
 			}
 			if(callback!=null)
 				callback(this);
@@ -617,6 +624,7 @@ var Characters = {
 			this.Dead = true;
 			this.Health = 0;
 			this.Move_From();
+			SFXs.Retrieve('explosion').Play();
 			Core.Explode(this);
 			if(!keep_data)
 			{
@@ -636,6 +644,12 @@ var Characters = {
 			return move_path;
 		};
 
+		this.Open_Actions = function()
+		{
+			console.log(mods);
+			console.log(this.Mods_By_Type("Self Action"));
+			// HUD_Display.Draw();
+		};
 		this.Mods_By_Type = function(type)
 		{
 			var cur = [];

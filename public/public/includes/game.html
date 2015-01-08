@@ -9,7 +9,7 @@
 		<br /><br /><br />
 		<center>Loading...</center>
 	</div>
-	<div id="imageHolder" style="position:fixed;top:-9999px;left:-9999px;width:500px;height:500px;"></div>
+	<div id="imageHolder" style="position:fixed;top:-9999px;left:-9999px;width:2000px;height:2000px;"></div>
 	<div id="canvasHolder">
 		<div class="canvas" id="backgroundCanvas" style="width:810px;height:665px;"></div>
 		<div class="canvas" id="buildingCanvas" style="width:600px;height:600px;"></div>
@@ -28,30 +28,11 @@
 	</div>
 	<div id="mainMenu" style="display:block;">
 		<img id="gameLogo" src="img/Logo.png">
-		<div class="btn_super" id="->levelSelect" onclick="displayNext(this.id);">Open New Game</div><br />
+		<div class="btn_super" id="->levelSelect" onclick="openLevelSelect()">Open New Game</div><br />
 		<div class="btn_super" id="->htp" onclick="displayNext(this.id);">How to Play</div><br />
 		<div class="btn_super" id="->tut" onclick="displayNext(this.id);">Tutorial</div><br />
 		<div class="btn_super" id="->options" onclick="displayNext(this.id);">Options</div><br />
 		<div class="btn_super" id="->credits" onclick="displayNext(this.id);">Credits</div>
-		<div class="sub_menu" id="levelSelect">
-			<img class="btnLevelIcon" src="img/Icons/unknown.png" id="0">
-				Ampersand
-			</img>
-			<br />
-			<img class="btnLevelIcon" src="img/Icons/unknown.png" id="1">
-				Antipex
-			</img>
-			<br />
-			<img class="btnLevelIcon" src="img/Icons/unknown.png" id="2">
-				Rat Race
-			</img>
-			<br />
-			<img class="btnLevelIcon" src="img/Icons/unknown.png" id="3">
-				Onslaught
-			</img>
-			<br />
-			<div class="btnBack" onclick="backNav(this.parentNode);">Back</div>
-		</div>
 		<div class="sub_menu" id="htp">
 			This game is played with the mouse.<br />
 			Click your units to order them.<br />
@@ -90,12 +71,20 @@
 			<div class="btnBack" onclick="backNav(this.parentNode);">Back</div>
 		</div>
 	</div>
-	<div id="endTurn">End Turn</div>
+	<div id="gameHelpers">
+		<div id="frames" style="color:rgb(18, 121, 11);">30/30 FPS</div>
+		<div class="btn" id="menuButton" onclick="(true);">Leave</div>
+		<div class="btn" id="pause" onmousedown="pause();"><pause></pause></div>
+		<div id="data"></div>
+		<div id="endTurn">End Turn</div>
+	</div>
 
 <!-- Open Source Libraries -->
 <script src="js/depend/scroll/Animate.js"></script>
 <script src="js/depend/scroll/Scroller.js"></script>
 <script src="js/depend/scroll/asset/Tiling.js"></script>
+
+<script src="js/depend/howler/howler.js"></script>
 
 <!-- General Game Dependencies -->
 <script src="js/core.js"></script>
@@ -104,18 +93,20 @@
 <script src="js/depend/text.js"></script>
 <script src="js/depend/images.js"></script>
 <script src="js/depend/animation.js"></script>
+<script src="js/depend/sounds.js"></script>
 <script src="js/depend/dialog.js"></script>
 <script src="js/depend/menu.js"></script>
 
 <!-- Game Specific Code -->
-<script src="js/data/menu_data.js"></script>
 <script src="js/data/img_data.js"></script>
 <script src="js/data/modifiers.js"></script>
 <script src="js/data/building_data.js"></script>
 <script src="js/data/terr_data.js"></script>
+<script src="js/data/sfxSprites.js"></script>
 <script src="js/data/char_data.js"></script>
 <script src="js/data/colors.js"></script>
 <script src="js/data/levels.js"></script>
+<script src="js/data/menu_data.js"></script>
 <script src="js/classes/tileBased/buildings.js"></script>
 <script src="js/classes/tileBased/terrain.js"></script>
 <script src="js/classes/tileBased/char.js"></script>

@@ -51,11 +51,14 @@ var Player_Class = function(game, name, team, colors)
 	this.Dead = false;
 	function ICON_DRAWER(imgData)
 	{
-		this.Draw = function(canvas, x, y)
+		this.Draw = function(canvas, x, y, w, h)
 		{
-			if(canvas.name=="menuCanvas")console.log(team,name,x,y);
-			var back = canvas.getImageData(x, y, imgData.width, imgData.height);
-			canvas.putImageData(merge(back,imgData), x, y);
+			if(w==null)w=imgData.width;
+			if(h==null)h=imgData.height;
+			var back = canvas.getImageData(x, y, w, h);
+			var canvasXScale = Canvas.Width/Canvas.MaxWidth;
+			var canvasYScale = Canvas.Height/Canvas.MaxHeight;
+			canvas.putImageData(scale(merge(back, scale(imgData, w/imgData.width, h/imgData.height)), canvasXScale, canvasYScale), x*canvasXScale, y*canvasYScale);
 		};
 	};
 	this.Icon = new ICON_DRAWER(charSprites[1][0]);
@@ -278,6 +281,10 @@ var Player_Class = function(game, name, team, colors)
 		if(~pos)
 		{
 			Units.splice(pos,1);
+			if(Units.length==0)
+			{
+				this.Lose();
+			}
 			return true;
 		}
 		return false;

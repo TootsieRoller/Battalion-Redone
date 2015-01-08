@@ -35,6 +35,12 @@ body{overflow:hidden}
 	border-bottom-style:solid;
 	border-width:0px 0px 1px;
 	border-color:#000;
+	overflow:auto;
+}
+
+.namelist{
+	display:block;
+	font-weight:bold;
 }
 
 .messageContainer{

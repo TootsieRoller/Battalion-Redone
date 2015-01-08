@@ -2,7 +2,7 @@ var Engine_Class = function(input)
 {
 	var UI;
 	var Units = [];
-	var Buildings = [];
+	var Cities = [];
 	var Players = [];
 	var Connected_Players = [];
 	var turn = 0;
@@ -13,7 +13,7 @@ var Engine_Class = function(input)
 	var buildings;
 	this.Terrain_Map = terre;
 	this.Units_Map = units;
-	this.Buildings_Map = buildings;
+	this.Cities_Map = buildings;
 	this.Name = null;
 	this.Interface = UI;
 	this.Game_Over = false;
@@ -57,11 +57,11 @@ var Engine_Class = function(input)
 		if(building.SELECTABLE==null)
 		{
 			var found = false;
-			for(var i in Buildings)
+			for(var i in Cities)
 			{
-				if(Buildings[i].Index==building)
+				if(Cities[i].Index==building)
 				{
-					building = Buildings[i];
+					building = Cities[i];
 					found = true;
 					break;
 				}
@@ -98,8 +98,8 @@ var Engine_Class = function(input)
 			console.error("Map position already occupied.");
 			return;
 		}
-		input.Index = Buildings.length;
-		Buildings.push(input);
+		input.Index = Cities.length;
+		Cities.push(input);
 		buildings.Set(x,y,input);
 		var ter = terre.At(x,y)
 		ter.Building = input;
@@ -188,6 +188,7 @@ var Engine_Class = function(input)
 		if(UI!=null)
 		{
 			UI.Close_Menu();
+			Canvas.Reflow();
 			UI.Start();
 			UI.Draw();
 			if(online)
@@ -200,6 +201,7 @@ var Engine_Class = function(input)
 	this.Leave = function(slot)
 	{
 		Players[slot].Lose();
+		if(UI)UI.ReportLeft(slot);
 	};
 
 	this.Data = function()
@@ -213,14 +215,16 @@ var Engine_Class = function(input)
 		return {
 			id:self.id,
 			map:self.Map,
+			name:self.Name,
+			turn:turn,
+			cur_player:cur_player,
 			connected:Connected_Players,
 			players:player_data
 		};
 	};
 	this.Clone = function()
 	{
-		var e = new Engine_Class(terre);
-		return e;
+		return new Engine_Class(JSON.stringify(this.Data()));
 	};
 	this.Restart = function()
 	{
@@ -238,10 +242,7 @@ var Engine_Class = function(input)
 
 	this.Add_Player = function(name, color)
 	{
-		if(currently_playing)return;
-console.log(Player_Class);
 		var player = new Player_Class(this, name, Players.length, color);
-console.log(player);
 		Players.push(player);
 		Connected_Players.push(null);
 		return player;
@@ -309,7 +310,7 @@ console.log(player);
 	};
 	this.Player = function(index)
 	{
-		if(index>=Players.length)return;
+		if(index>=Players.length)return null;
 		return Players[index];
 	};
 	this.Next_Player = function()
@@ -349,6 +350,16 @@ console.log(player);
 			}, 1000);
 		}
 	};
+	this.Request_Connections = function()
+	{
+		var nameList = [];
+		for(var i in Players)
+		{
+			if(Connected_Players[i]==null)continue;
+			nameList.push([Players[i].Name, Connected_Players[i]]);
+		}
+		return nameList;
+	};
 	this.Turn = function()
 	{
 		return turn;
@@ -365,7 +376,10 @@ console.log(player);
 		var data = JSON.parse(input);
 		this.id = data.id;
 		this.Map = data.map;
-		var map = Clone_Map(Levels.Terrain(data.map));
+		this.Name = data.name;
+		turn = data.turn;
+		cur_player = data.cur_player;
+		var map = Clone_Map(Levels.Terrain.Data(data.map));
 		if(map!=null)
 		{
 			for(var x=0;x<map.length;x++)
@@ -379,42 +393,36 @@ console.log(player);
 		buildings = new Map_Holder(Blank_Map(terre.Width, terre.Height));
 		this.Terrain_Map = terre;
 		this.Units_Map = units;
-		this.Buildings_Map = buildings;
+		this.Cities_Map = buildings;
 		Connected_Players = data.connected;
 		var players = data.players;
 		for(var p in players)
 		{
 			var p_data = players[p];
-	console.log("p",p);
 			var player = this.Add_Player(p_data.name, p_data.color);
-	console.log(player);
 			player.data = p_data.data;
-			var units = p_data.units;
-			for(var u in units)
-			{
-	console.log("u",u);
-				var u_data = units[u];
-	console.log(u_data);
-				this.Add_Unit(new Characters.Char_Class(this, u_data.index), u_data.x, u_data.y, p).Health = u_data.health;
-	console.log("ud");
+			if(Connected_Players[p]==socket.index){
+				client = player;
 			}
-			var build = p_data.buildings;
-			for(var b in build)
+			var cur_units = p_data.units;
+			for(var u in cur_units)
 			{
-	console.log("b",b);
-				var b_data = build[u];
-	console.log(b_data);
+				var u_data = cur_units[u];
+				this.Add_Unit(new Characters.Char_Class(this, u_data.index), u_data.x, u_data.y, p).Health = u_data.health;
+			}
+			var cur_build = p_data.buildings;
+			for(var b in cur_build)
+			{
+				var b_data = cur_build[b];
 				var cur_b = this.Add_Building(new Buildings.Build_Class(this, b_data.index), b_data.x, b_data.y, p);
 				cur_b.Stature = b_data.stature;
 				cur_b.Resources = b_data.resources;
-	console.log("bd");
 			}
 		}
-	console.log("done");
 	}
 	else if(typeof(input)!=='undefined')
-	{ // when input is an empty map--make new game
-		var map = Clone_Map(input);
+	{ // when input is a map id--make new game
+		var map = Clone_Map(Levels.Terrain.Data(input));
 		if(map!=null)
 		{
 			for(var x=0;x<map.length;x++)
@@ -423,13 +431,15 @@ console.log(player);
 				map[x][y] = new Terrain.Terre_Class(this,map[x][y],"Terrain("+x+","+y+")",x,y);
 			}
 		}
+		this.Map = input;
+		this.id = -1;
 		terre = new Map_Holder(map);
 		units = new Map_Holder(Blank_Map(terre.Width, terre.Height));
 		buildings = new Map_Holder(Blank_Map(terre.Width, terre.Height));
 		this.Terrain_Map = terre;
 		this.Units_Map = units;
-		this.Buildings_Map = buildings;
-		//var temp_game = new game.Engine_Class();
+		this.Cities_Map = buildings;
+		Levels.Run(this, input);
 	}
 	else this.valid = false; // game does not have valid input to function
 };

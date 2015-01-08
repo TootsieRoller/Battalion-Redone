@@ -1,0 +1,1 @@
+C:\Users\elllllliiiiraaar\Documents\mongo\bin\mongod --dbpath "C:\Users\elllllliiiiraaar\Documents\mongo\db"

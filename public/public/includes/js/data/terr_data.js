@@ -211,7 +211,7 @@ for(var x=1;x<Terrain_Data.TERRE.length;x++)
 	// setting sprites
 	var _t = Terrain_Data.TERRE[x];
 	_t.Sprite = Images.Declare("Terrain/"+_t.Name+".png",_t.Name);
-	// _t.Sprite.Stretch(true);
+	_t.Sprite.Stretch(true);
 	if(_t.Modifiers.length>0)
 	{
 		// writing descriptions

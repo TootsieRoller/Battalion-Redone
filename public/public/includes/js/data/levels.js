@@ -211,22 +211,32 @@ var Levels_Class = function()
 		}
 	};
 
-	this.Draw = function(level, canvas, xOffset, yOffset, width, height)
+	this.Draw = function(canvas, x, y, w, h, level)
 	{
-		var map = LevelData.Terrain[level];
-		var tileWidth = width/map.length;
-		var tileHeight = height/map[0].length;
-		debugger;
-		for(var x=0;x<map.length;x++)
-		for(var y=0;y<map[x].length;y++)
-		{
-			var img = Terrain_Data.TERRE[map[x][y]].Sprite.Image();
-			Terrain_Data.TERRE[map[x][y]].Sprite.Draw(canvas,xOffset+x*tileWidth,yOffset+y*tileHeight,.1);
-		}
+		INTERFACE.Sample_Draw(canvas, x, y, w, h, new Engine_Class(level));
 	};
-	this.Terrain = function(num)
-	{
-		return LevelData.Terrain[num];
+	this.Terrain = {
+		Draw:function(canvas, x, y, w, h, level){
+			if(canvas==null||typeof canvas==="undefined")return;
+			if(x==null||typeof x==="undefined")x = 0;
+			if(y==null||typeof y==="undefined")y = 0;
+			if(w==null||typeof w==="undefined")w = 100;
+			if(h==null||typeof h==="undefined")h = 100;
+			if(level==null||typeof level==="undefined")level = 0;
+			var map = LevelData.Terrain[level];
+			if(!map)return;
+			var tileWidth = w/map.length;
+			var tileHeight = h/map[0].length;
+			for(var i=0;i<map.length;i++)
+			for(var j=0;j<map[i].length;j++)
+			{
+				var img = Terrain_Data.TERRE[map[i][j]].Sprite.Image();
+				Terrain_Data.TERRE[map[i][j]].Sprite.Draw(canvas,x+i*tileWidth,y+j*tileHeight,tileWidth,tileHeight);
+			}
+		},
+		Data:function(num){
+			return LevelData.Terrain[num];
+		}
 	};
 	this.Names = function(num)
 	{
@@ -272,6 +282,10 @@ var Levels_Class = function()
 	this.Current = function()
 	{
 		return unlocked_levels;
+	};
+	this.Length = function()
+	{
+		return LevelData.Terrain.length;
 	};
 	this.Next = function()
 	{

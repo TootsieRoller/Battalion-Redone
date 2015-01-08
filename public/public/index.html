@@ -10,21 +10,17 @@
 	<div id="container">
 		<iframe src="login/login.html" id="gameFrame" frameborder="0" name="gameFrame"></iframe>
 	</div>
-	<div id="gameHelpers">
-		<div id="frames" style="color:rgb(18, 121, 11);">30/30 FPS</div>
-		<div class="btn" id="menuButton" onclick="(true);">Leave</div>
-		<div class="btn" id="pause" onmousedown="pause();"><pause></pause></div>
-		<div id="data"></div>
-	</div>
 	<div id="lobbyContainer">
 		<iframe src="includes/holder.html" id="lobbyFrame" frameborder="0" name="lobbyFrame"></iframe>
 		<center><a id="refreshLobby" href="includes/holder.html" target="lobbyFrame">Refresh?</a></center>
 	</div>
-	<center><div class="selectable" id="footer"><b>
-		<font size="6">Battalion</font><br />
-		<font size="5">Tactic centred turn based strategy game</font><br />
-		<font size="3">Alpha Version 0.0.0.0.2</font>
-	</b></div></center>
+	<div class="selectable" id="footer">
+		<center><b>
+		<div style="font-size:3vh">Battalion</div>
+		<div style="font-size:2vh">Tactic centred turn based strategy game</div>
+		<div style="font-size:2vh">Alpha Version 0.0.0.0.2</div>
+		</b></center>
+	</div>
 
 <!-- Online Client Service -->
 <script src="/socket.io/socket.io.js"></script>
